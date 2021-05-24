@@ -1,0 +1,36 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": [
+    "apiPort",
+    "p2pPort",
+    "apiKey",
+    "peers"
+  ],
+  "properties": {
+    "port": {
+      "type": "integer"
+    },
+    "apiKey": {
+      "type": "string"
+    },
+    "peers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "name",
+          "endpoint"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "endpoint": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

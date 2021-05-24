@@ -1,0 +1,48 @@
+{
+  // Use IntelliSense to learn about possible attributes.
+  // Hover to view descriptions of existing attributes.
+  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Member A",
+      "runtimeExecutable": "nodemon",
+      "resolveSourceMapLocations": [
+        "!**/node_modules/**"
+      ],
+      "env": {
+        "DATA_DIRECTORY": "${workspaceFolder}/data/member-a",
+        "LOG_LEVEL": "info"
+      },
+      "args": [
+        "|",
+        "bunyan",
+        "-o",
+        "short"
+      ],
+      "outputCapture": "std",
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Member B",
+      "runtimeExecutable": "nodemon",
+      "resolveSourceMapLocations": [
+        "!**/node_modules/**"
+      ],
+      "env": {
+        "DATA_DIRECTORY": "${workspaceFolder}/data/member-b",
+        "LOG_LEVEL": "info",
+      },
+      "args": [
+        "|",
+        "bunyan",
+        "-o",
+        "short"
+      ],
+      "outputCapture": "std",
+    }
+  ]
+}
