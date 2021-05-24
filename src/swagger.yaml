@@ -1,0 +1,238 @@
+---
+  openapi: 3.0.0
+  info:
+    version: '1.0'
+    title: Data Exchange API
+    description: To invoke the API programmatically, include the API key as Bearer token in the authorization header.
+  servers:
+    - url: /api/v1
+  paths:
+    /status:
+      get:
+        tags:
+          - Status
+        description: Status
+        responses:
+          '200':
+            description: Status
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/Status'
+          '500':
+            description: Internal error
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/Error'  
+    /messages:
+      post:
+        tags:
+          - Messages
+        description: Send message
+        requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+        responses:
+          '200':
+            description: Message submitted
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/Submitted'
+          '400':
+            description: Invalid message or recipient
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/Error'
+          '500':
+            description: Internal error
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/Error'   
+    /blobs/{blobPath}:
+      get:
+        tags:
+          - Blobs
+        description: Retreive blob
+        parameters:
+          - in: path
+            name: blobPath
+            required: true
+            schema:
+              type: string
+            description: Blob path
+        responses:
+          '200':
+            description: Blob content
+            content:
+              application/json:
+                schema:
+                  type: string
+                  format: binary
+          '404':
+            description: Blob not found
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/Error'
+          '500':
+            description: Internal error
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/Error'
+      put:
+        tags:
+          - Blobs
+        description: Store blob
+        parameters:
+          - in: path
+            name: blobPath
+            required: true
+            schema:
+              type: string
+            description: Blob path
+        requestBody:
+          description: Blob
+          required: true
+          content:
+            multipart/form-data:
+              schema:
+                type: object
+                properties:
+                  fileName:
+                    type: string
+                    format: binary
+        responses:
+          '200':
+            description: Blob hash
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/BlobHash'
+          '400':
+            description: Missing blob
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/Error'
+          '500':
+            description: Internal error
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/Error'
+    /transfers:
+      post:
+        tags:
+          - Transfers
+        description: Transfer blob
+        requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Transfer'
+        responses:
+          '200':
+            description: Transfer submitted
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/Submitted'
+          '400':
+            description: Invalid path or recipient
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/Error'
+          '404':
+            description: Blob not found
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/Error'
+          '500':
+            description: Internal error
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/Error'     
+# schemas               
+  components:
+    securitySchemes:
+      bearerAuth:
+        type: http
+        scheme: bearer
+        bearerFormat: JWT
+    schemas:
+      Status:
+        type: object
+        required:
+          - messageQueueSize
+          - peers
+        properties:
+          messageQueueSize:
+            type: integer
+          peers:
+            type: array
+            items:
+              type: object
+              required:
+                - name
+                - available
+              properties:
+                name:
+                  type: string
+                available:
+                  type: boolean
+      Message:
+        type: object
+        required:
+          - message
+          - recipient
+        properties:
+          message:
+            type: string
+          recipient:
+            type: string
+      BlobHash:
+        type: object
+        required:
+          - hash
+        properties:
+          hash:
+            type: string
+      Transfer:
+        type: object
+        required:
+          - path
+          - recipient
+        properties:
+          path:
+            type: string
+          recipient:
+            type: string
+      Submitted:
+        type: object
+        required:
+          - status
+        properties:
+          status:
+            type: string
+            enum: ['submitted']
+      Error:
+        type: object
+        required:
+          - error
+        properties:
+          error:
+            type: string
+  security:
+    - bearerAuth: [] 
