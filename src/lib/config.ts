@@ -1,12 +1,10 @@
-import { promisify } from 'util';
-import { readFile } from 'fs';
+import { promises as fs } from 'fs';
 import Ajv from 'ajv';
 import configSchema from '../schemas/config.json';
 import * as utils from './utils';
 import { IConfig } from './interfaces';
 import path from 'path';
 
-const asyncReadFile = promisify(readFile);
 const ajv = new Ajv();
 const validateConfig = ajv.compile(configSchema);
 const configFilePath = path.join(utils.constants.DATA_DIRECTORY, utils.constants.CONFIG_FILE_NAME);
@@ -19,7 +17,7 @@ export const init = async () => {
 
 const loadConfigFile = async () => {
   try {
-    const data = JSON.parse(await asyncReadFile(configFilePath, 'utf8'));
+    const data = JSON.parse(await fs.readFile(configFilePath, 'utf8'));
     if(validateConfig(data)) {
       config = data as IConfig;
       for(const peer of config.peers) {
@@ -33,4 +31,8 @@ const loadConfigFile = async () => {
   } catch(err) {
     throw new Error(`Failed to read configuration file. ${err}`);
   }
+};
+
+export const persistConfig = async () => {
+  await fs.writeFile(configFilePath, JSON.stringify(config));
 };
