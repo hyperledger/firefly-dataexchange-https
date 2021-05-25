@@ -3,11 +3,13 @@ import * as blobsHandler from '../handlers/blobs';
 import * as messagesHandler from '../handlers/messages';
 import * as utils from '../lib/utils';
 import RequestError from '../lib/request-error';
-import { config } from '../lib/config';
+import { config, persistConfig } from '../lib/config';
 import { IStatus } from '../lib/interfaces';
 import https from 'https';
 import { key, cert, ca } from '../lib/cert';
 import * as eventsHandler from '../handlers/events';
+import { promises as fs } from 'fs';
+import path from 'path';
 
 export const router = Router();
 
@@ -42,6 +44,27 @@ router.get('/status', async (_req, res, next) => {
 
 router.get('/peers', async (_req, res) => {
   res.send(config.peers);
+});
+
+router.put('/peers/:name', async (req, res, next) => {
+  try {
+    if(req.body.endpoint === undefined) {
+      throw new RequestError('Missing endpoint', 400);
+    }
+    await fs.writeFile(path.join(utils.constants.DATA_DIRECTORY, utils.constants.PEER_CERTS_SUBDIRECTORY, `${req.params.name}.pem`), req.body.certificate);
+    let peer = config.peers.find(peer => peer.name === req.params.name);
+    if(peer === undefined) {
+      peer = {
+        name: req.params.name,
+        endpoint: req.body.endpoint
+      };
+      config.peers.push(peer);
+    }
+    await persistConfig();
+    res.send({ status: 'stored' });
+  } catch (err) {
+    next(err);
+  }
 });
 
 router.post('/messages', async (req, res, next) => {
