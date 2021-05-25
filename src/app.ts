@@ -36,23 +36,32 @@ export const start = async () => {
     requestCert: true,
   }, p2pApp);
 
-  const wss = new WebSocket.Server({ server: apiServer });
+  const wss = new WebSocket.Server({
+    server: apiServer, verifyClient: (info, cb) => {
+      if (info.req.headers.authorization === `Bearer ${config.apiKey}`) {
+        cb(true);
+      } else {
+        cb(false, 401, 'Unauthorized');
+      }
+    }
+  });
 
-  p2pEventEmitter.addListener('event', event =>  eventsHandler.queueEvent(event));
-  blobsEventEmitter.addListener('event', event =>  eventsHandler.queueEvent(event));
-  messagesEventEmitter.addListener('event', event =>  eventsHandler.queueEvent(event));
+  p2pEventEmitter.addListener('event', event => eventsHandler.queueEvent(event));
+  blobsEventEmitter.addListener('event', event => eventsHandler.queueEvent(event));
+  messagesEventEmitter.addListener('event', event => eventsHandler.queueEvent(event));
   eventsHandler.eventEmitter.addListener('event', event => wss.clients.forEach(client => client.send(JSON.stringify(event))));
 
   wss.on('connection', (webSocket: WebSocket) => {
+
     const event = eventsHandler.getCurrentEvent();
-    if(event !== undefined) {
+    if (event !== undefined) {
       webSocket.send(JSON.stringify(event));
     }
 
     webSocket.on('message', async message => {
       try {
         const messageContent = JSON.parse(message.toLocaleString());
-        if(messageContent.action === 'commit') {
+        if (messageContent.action === 'commit') {
           eventsHandler.handleCommit();
         }
       } catch (err) {
@@ -62,14 +71,10 @@ export const start = async () => {
 
   });
 
-  apiApp.use('/swagger', swaggerUi.serve, swaggerUi.setup(swaggerDocument, {
-    swaggerOptions: {
-      authAction :{ JWT: {name: "JWT", schema: {type: "apiKey", in: "header", name: "Authorization", description: ""}, value: "Bearer <JWT>"} }
-    }
-  }));
+  apiApp.use('/swagger', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
   apiApp.use((req, res, next) => {
-    if(req.path === '/') {
+    if (req.path === '/') {
       res.redirect('/swagger');
     } else {
       if (req.headers['authorization'] !== `Bearer ${config.apiKey}`) {
