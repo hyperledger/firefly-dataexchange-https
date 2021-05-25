@@ -24,7 +24,8 @@ export const constants = {
 const log = createLogger({ name: 'utils.ts', level: constants.LOG_LEVEL as LogLevelString });
 
 export const regexp = {
-  FILE_KEY: /^(\/[a-z0-9+-_.]+)+$/
+  FILE_KEY: /^(\/[a-z0-9\+\-\_\.]+)+$/,
+  CONSECUTIVE_DOTS: /\.\./
 };
 
 export const fileExists = async (filePath: string): Promise<boolean> => {
