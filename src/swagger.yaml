@@ -167,10 +167,10 @@
 # schemas               
   components:
     securitySchemes:
-      bearerAuth:
-        type: http
-        scheme: bearer
-        bearerFormat: JWT
+      ApiKeyAuth:
+        type: apiKey
+        in: header
+        name: X-API-KEY
     schemas:
       Status:
         type: object
@@ -235,4 +235,4 @@
           error:
             type: string
   security:
-    - bearerAuth: [] 
+    - ApiKeyAuth: [] 
