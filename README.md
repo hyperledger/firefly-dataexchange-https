@@ -33,7 +33,7 @@ Create `config.json` in the data directory and set its content to:
 Based on this configuration:
 - Port 3000 will be used to access the API
 - Port 3001 will be used for P2P communications
-- The API key will be set to `xxxxx` (bearer token)
+- The API key will be set to `xxxxx`
 - There is one peer named `org-b` whose P2P endpoint is `https://localhost:4001`
 
 #### Generate certificate
@@ -74,7 +74,7 @@ export LOG_LEVEL=info
 Based on this configuration:
 - Port 4000 will be used to access the API
 - Port 4001 will be used for P2P communications
-- The API key will be set to `yyyyy` (bearer token)
+- The API key will be set to `yyyyy`
 - There is one peer named `org-a` whose P2P endpoint is `https://localhost:3001`
 
 

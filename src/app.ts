@@ -38,7 +38,7 @@ export const start = async () => {
 
   const wss = new WebSocket.Server({
     server: apiServer, verifyClient: (info, cb) => {
-      if (info.req.headers.authorization === `Bearer ${config.apiKey}`) {
+      if (info.req.headers['x-api-key'] === config.apiKey) {
         cb(true);
       } else {
         cb(false, 401, 'Unauthorized');
@@ -77,7 +77,7 @@ export const start = async () => {
     if (req.path === '/') {
       res.redirect('/swagger');
     } else {
-      if (req.headers['authorization'] !== `Bearer ${config.apiKey}`) {
+      if (req.headers['x-api-key'] !== config.apiKey) {
         next(new RequestError('Unauthorized', 401));
       } else {
         next();
