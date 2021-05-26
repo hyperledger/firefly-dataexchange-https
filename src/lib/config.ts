@@ -34,5 +34,5 @@ const loadConfigFile = async () => {
 };
 
 export const persistConfig = async () => {
-  await fs.writeFile(configFilePath, JSON.stringify(config));
+  await fs.writeFile(configFilePath, JSON.stringify(config, null, 2));
 };

@@ -12,6 +12,10 @@ export let ca: string[] = [];
 export const init = async () => {
   key = (await fs.readFile(path.join(utils.constants.DATA_DIRECTORY, utils.constants.KEY_FILE))).toString();
   cert = (await fs.readFile(path.join(utils.constants.DATA_DIRECTORY, utils.constants.CERT_FILE))).toString();
+  loadCAs();
+};
+
+export const loadCAs = async () => {
   const peerCertsPath = path.join(utils.constants.DATA_DIRECTORY, utils.constants.PEER_CERTS_SUBDIRECTORY);
   const peerCerts = await fs.readdir(peerCertsPath);
   for(const peerCert of peerCerts) {

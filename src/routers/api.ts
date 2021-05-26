@@ -6,7 +6,7 @@ import RequestError from '../lib/request-error';
 import { config, persistConfig } from '../lib/config';
 import { IStatus } from '../lib/interfaces';
 import https from 'https';
-import { key, cert, ca } from '../lib/cert';
+import { key, cert, ca, loadCAs } from '../lib/cert';
 import * as eventsHandler from '../handlers/events';
 import { promises as fs } from 'fs';
 import path from 'path';
@@ -61,6 +61,7 @@ router.put('/peers/:name', async (req, res, next) => {
       config.peers.push(peer);
     }
     await persistConfig();
+    await loadCAs();
     res.send({ status: 'stored' });
   } catch (err) {
     next(err);
