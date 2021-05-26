@@ -42,7 +42,7 @@ router.get('/status', async (_req, res, next) => {
   }
 });
 
-router.get('/peers', async (_req, res) => {
+router.get('/peers', (_req, res) => {
   res.send(config.peers);
 });
 
@@ -51,7 +51,7 @@ router.put('/peers/:name', async (req, res, next) => {
     if (req.body.endpoint === undefined) {
       throw new RequestError('Missing endpoint', 400);
     }
-    if(req.body.certificate !== undefined) {
+    if (req.body.certificate !== undefined) {
       await fs.writeFile(path.join(utils.constants.DATA_DIRECTORY, utils.constants.PEER_CERTS_SUBDIRECTORY, `${req.params.name}.pem`), req.body.certificate);
     }
     let peer = config.peers.find(peer => peer.name === req.params.name);
@@ -64,7 +64,7 @@ router.put('/peers/:name', async (req, res, next) => {
     }
     await persistConfig();
     await loadCAs();
-    res.send({ status: 'stored' });
+    res.send({ status: 'added' });
   } catch (err) {
     next(err);
   }
@@ -85,7 +85,7 @@ router.delete('/peers/:name', async (req, res, next) => {
     config.peers = config.peers.filter(peer => peer.name !== req.params.name);
     await persistConfig();
     await loadCAs();
-    res.send({ status: 'deleted' });
+    res.send({ status: 'removed' });
   } catch (err) {
     next(err);
   }
