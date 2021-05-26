@@ -25,6 +25,85 @@
               application/json:
                 schema:
                   $ref: '#/components/schemas/Error'  
+    /peers:
+      get:
+        tags:
+          - Peers
+        description: List peers
+        responses:
+          '200':
+            description: Peers
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/Peers'
+          '500':
+            description: Internal error
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/Error'  
+    /peers/{name}:
+      put:
+        tags:
+          - Peers
+        description: Add peer
+        parameters:
+          - in: path
+            name: name
+            required: true
+            schema:
+              type: string
+            description: Peer name
+        responses:
+          '200':
+            description: Peer added
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/Added'
+          '400':
+            description: Missing peer endpoint
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/Error' 
+          '500':
+            description: Internal error
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/Error' 
+      delete:
+        tags:
+          - Peers
+        description: Remove peer
+        parameters:
+          - in: path
+            name: name
+            required: true
+            schema:
+              type: string
+            description: Peer name
+        responses:
+          '200':
+            description: Peer removed
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/Removed'
+          '404':
+            description: Peer not found
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/Error' 
+          '500':
+            description: Internal error
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/Error' 
     /messages:
       post:
         tags:
@@ -163,8 +242,7 @@
             content:
               application/json:
                 schema:
-                  $ref: '#/components/schemas/Error'     
-# schemas               
+                  $ref: '#/components/schemas/Error'           
   components:
     securitySchemes:
       ApiKeyAuth:
@@ -192,6 +270,36 @@
                   type: string
                 available:
                   type: boolean
+      Peer:
+        type: object
+        required:
+          - name
+          - endpoint
+        properties:
+          name:
+            type: string
+          endpoint:
+            type: string
+      Peers:
+        type: array
+        items:
+          $ref: '#/components/schemas/Peer'
+      Added:
+        type: object
+        required:
+          - status
+        properties:
+          status:
+            type: string
+            enum: ['added']
+      Removed:
+        type: object
+        required:
+          - status
+        properties:
+          status:
+            type: string
+            enum: ['removed']
       Message:
         type: object
         required:
