@@ -12,7 +12,7 @@ export let ca: string[] = [];
 export const init = async () => {
   key = (await fs.readFile(path.join(utils.constants.DATA_DIRECTORY, utils.constants.KEY_FILE))).toString();
   cert = (await fs.readFile(path.join(utils.constants.DATA_DIRECTORY, utils.constants.CERT_FILE))).toString();
-  loadCAs();
+  await loadCAs();
 };
 
 export const loadCAs = async () => {

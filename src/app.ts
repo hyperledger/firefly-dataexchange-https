@@ -20,6 +20,8 @@ const log = createLogger({ name: 'app.ts', level: utils.constants.LOG_LEVEL as L
 
 const swaggerDocument = YAML.load(path.join(__dirname, './swagger.yaml'));
 
+let delegatedWebSocket: WebSocket | undefined = undefined;
+
 export const start = async () => {
   await initConfig();
   await initCert();
@@ -49,15 +51,18 @@ export const start = async () => {
   p2pEventEmitter.addListener('event', event => eventsHandler.queueEvent(event));
   blobsEventEmitter.addListener('event', event => eventsHandler.queueEvent(event));
   messagesEventEmitter.addListener('event', event => eventsHandler.queueEvent(event));
-  eventsHandler.eventEmitter.addListener('event', event => wss.clients.forEach(client => client.send(JSON.stringify(event))));
-
-  wss.on('connection', (webSocket: WebSocket) => {
-
-    const event = eventsHandler.getCurrentEvent();
-    if (event !== undefined) {
-      webSocket.send(JSON.stringify(event));
+    
+  eventsHandler.eventEmitter.addListener('event', event => {
+    if(delegatedWebSocket !== undefined) {
+      delegatedWebSocket.send(JSON.stringify(event));
     }
+  });
+  
+  // eventsHandler.eventEmitter.addListener('event', event => wss.clients.forEach(client => client.send(JSON.stringify(event))));
 
+  const assignWebSocketDelegate = (webSocket: WebSocket) => {
+    delegatedWebSocket = webSocket;
+    const event = eventsHandler.getCurrentEvent();
     webSocket.on('message', async message => {
       try {
         const messageContent = JSON.parse(message.toLocaleString());
@@ -68,7 +73,18 @@ export const start = async () => {
         log.error(`Failed to process websocket message ${err}`);
       }
     });
+    if (event !== undefined) {
+      webSocket.send(JSON.stringify(event));
+    }
+    webSocket.on('close', () => {
+      assignWebSocketDelegate(wss.clients.values().next().value);
+    });
+  };
 
+  wss.on('connection', (webSocket: WebSocket) => {
+    if(delegatedWebSocket === undefined) {
+      assignWebSocketDelegate(webSocket);
+    }
   });
 
   apiApp.use('/swagger', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
@@ -96,6 +112,6 @@ export const start = async () => {
   const apiServerPromise = new Promise<void>(resolve => apiServer.listen(config.apiPort, () => resolve()));
   const p2pServerPromise = new Promise<void>(resolve => p2pServer.listen(config.p2pPort, () => resolve()));
   await Promise.all([apiServerPromise, p2pServerPromise]);
-  log.info(`Blob exchange listening on ports ${config.apiPort} (API) and ${config.p2pPort} (P2P) - log level "${utils.constants.LOG_LEVEL}"`);
+  log.info(`Data exchange listening on ports ${config.apiPort} (API) and ${config.p2pPort} (P2P) - log level "${utils.constants.LOG_LEVEL}"`);
 
 };
