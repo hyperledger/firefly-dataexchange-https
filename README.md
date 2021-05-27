@@ -2,6 +2,10 @@
 
 The following steps show how to setup Firefly MTLS Data Exchange for two organizations named `org-a` and `org-b` running on `localhost`.
 
+![Data exchange diagram](./diagram.png)
+
+`org-a` will use port `3000` for API and port `3001` for P2P. `org-b` will use port `4000` for API and port `4001` for P2P. Each organization will have its own private key and self-signed certificate.
+
 ## Setup org-a
 
 #### Environment variables
