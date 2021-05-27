@@ -112,10 +112,11 @@ router.post('/messages', async (req, res, next) => {
 
 router.get('/blobs/*', async (req, res, next) => {
   try {
-    if (!utils.regexp.FILE_KEY.test(req.body.path) || utils.regexp.CONSECUTIVE_DOTS.test(req.body.path)) {
+    const blobPath = `/${req.params[0]}`;
+    if (!utils.regexp.FILE_KEY.test(blobPath) || utils.regexp.CONSECUTIVE_DOTS.test(blobPath)) {
       throw new RequestError('Invalid path', 400);
     }
-    let blobStream = await blobsHandler.retreiveBlob(req.params[0]);
+    let blobStream = await blobsHandler.retreiveBlob(blobPath);
     blobStream.on('end', () => res.end());
     blobStream.pipe(res);
   } catch (err) {
@@ -125,11 +126,12 @@ router.get('/blobs/*', async (req, res, next) => {
 
 router.put('/blobs/*', async (req, res, next) => {
   try {
-    if (!utils.regexp.FILE_KEY.test(req.body.path) || utils.regexp.CONSECUTIVE_DOTS.test(req.body.path)) {
+    const blobPath = `/${req.params[0]}`;
+    if (!utils.regexp.FILE_KEY.test(blobPath) || utils.regexp.CONSECUTIVE_DOTS.test(blobPath)) {
       throw new RequestError('Invalid path', 400);
     }
     const file = await utils.extractFileFromMultipartForm(req);
-    const hash = await blobsHandler.storeBlob(file, req.params[0]);
+    const hash = await blobsHandler.storeBlob(file, blobPath);
     res.send({ hash });
   } catch (err) {
     next(err);
