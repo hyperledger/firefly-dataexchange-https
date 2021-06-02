@@ -310,6 +310,8 @@
             type: string
           recipient:
             type: string
+          requestID:
+            type: string
       BlobHash:
         type: object
         required:
@@ -326,6 +328,8 @@
           path:
             type: string
           recipient:
+            type: string
+          requestID:
             type: string
       Submitted:
         type: object
