@@ -114,11 +114,11 @@ This will make it possible for the organizations to establish MTLS communication
 | Type            | Description                                                | Additional properties
 |-----------------|------------------------------------------------------------|-----------------------
 |blob-received    | Emitted to the recipient when a blob has been transferred  | sender, path, hash
-|blob-delivered   | Emitted to the sender when a blob has been delivered       | recipient, path
-|blob-failed      | Emitted to the sender when a blob could not be delivered   | recipient, path
+|blob-delivered   | Emitted to the sender when a blob has been delivered       | recipient, path, requestID (optional)
+|blob-failed      | Emitted to the sender when a blob could not be delivered   | recipient, path, requestID (optional)
 |message-received | Emitted to the recipient when a message has been sent      | sender, message
-|message-delivered| Emitted to the sender when a message has been delivered    | recipient, message
-|message-failed   | Emitted to the sender when a message could not be delivered| recipient, message
+|message-delivered| Emitted to the sender when a message has been delivered    | recipient, message, requestID (optional)
+|message-failed   | Emitted to the sender when a message could not be delivered| recipient, message, requestID (optional)
 
 - After receiving a websocket message, a commit must be sent in order to receive the next one:
   ```
