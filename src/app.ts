@@ -67,13 +67,13 @@ export const start = async () => {
   p2pEventEmitter.addListener('event', event => eventsHandler.queueEvent(event));
   blobsEventEmitter.addListener('event', event => eventsHandler.queueEvent(event));
   messagesEventEmitter.addListener('event', event => eventsHandler.queueEvent(event));
-    
+
   eventsHandler.eventEmitter.addListener('event', event => {
-    if(delegatedWebSocket !== undefined) {
+    if (delegatedWebSocket !== undefined) {
       delegatedWebSocket.send(JSON.stringify(event));
     }
   });
-  
+
   const assignWebSocketDelegate = (webSocket: WebSocket) => {
     delegatedWebSocket = webSocket;
     const event = eventsHandler.getCurrentEvent();
@@ -96,7 +96,7 @@ export const start = async () => {
   };
 
   wss.on('connection', (webSocket: WebSocket) => {
-    if(delegatedWebSocket === undefined) {
+    if (delegatedWebSocket === undefined) {
       assignWebSocketDelegate(webSocket);
     }
   });
@@ -107,7 +107,7 @@ export const start = async () => {
     if (req.path === '/') {
       res.redirect('/swagger');
     } else {
-      if (req.headers['x-api-key'] !== config.apiKey) {
+      if (config.apiKey !== undefined && req.headers['x-api-key'] !== config.apiKey) {
         next(new RequestError('Unauthorized', 401));
       } else {
         next();
@@ -123,9 +123,10 @@ export const start = async () => {
   p2pApp.use('/api/v1', p2pRouter);
   p2pApp.use(errorHandler);
 
-  const apiServerPromise = new Promise<void>(resolve => apiServer.listen(config.apiPort, () => resolve()));
-  const p2pServerPromise = new Promise<void>(resolve => p2pServer.listen(config.p2pPort, () => resolve()));
+  const apiServerPromise = new Promise<void>(resolve => apiServer.listen(config.api.port, config.api.hostname, () => resolve()));
+  const p2pServerPromise = new Promise<void>(resolve => p2pServer.listen(config.p2p.port, config.p2p.hostname, () => resolve()));
   await Promise.all([apiServerPromise, p2pServerPromise]);
-  log.info(`Data exchange listening on ports ${config.apiPort} (API) and ${config.p2pPort} (P2P) - log level "${utils.constants.LOG_LEVEL}"`);
+  log.info(`Data exchange running on http://${config.api.hostname}:${config.api.port} (API) and ` +
+    `https://${config.p2p.hostname}:${config.p2p.port} (P2P) - log level "${utils.constants.LOG_LEVEL}"`);
 
 };

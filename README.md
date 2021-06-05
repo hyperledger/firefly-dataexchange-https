@@ -22,12 +22,18 @@ Create `config.json` in the data directory and set its content to:
 ```
 {
   "$schema": "../../src/schemas/config.json",
-  "apiPort": 3000,
-  "p2pPort": 3001,
+  "api": {
+    "hostname": "localhost",
+    "port": 3000
+  },
+  "p2p": {
+    "hostname": "localhost",
+    "port": 3001
+  },
   "apiKey": "xxxxx",
   "peers": [
     {
-      "name": "org-b",
+      "id": "org-b",
       "endpoint": "https://localhost:4001"
     }
   ]
@@ -35,9 +41,9 @@ Create `config.json` in the data directory and set its content to:
 ```
 
 Based on this configuration:
-- Port 3000 will be used to access the API
-- Port 3001 will be used for P2P communications
-- The API key will be set to `xxxxx`
+- API will be accessed via localhost:3000
+- P2P communications will use localhost:3001
+- The API key will be set to `xxxxx` (this is optional)
 - There is one peer named `org-b` whose P2P endpoint is `https://localhost:4001`
 
 #### Generate certificate
@@ -63,22 +69,28 @@ export LOG_LEVEL=info
 ```
 {
   "$schema": "../../src/schemas/config.json",
-  "apiPort": 4000,
-  "p2pPort": 4001,
-  "apiKey": "yyyyy",
+  "api": {
+    "hostname": "localhost",
+    "port": 4000
+  },
+  "p2p": {
+    "hostname": "localhost",
+    "port": 4001
+  },
+  "apiKey": "xxxxx",
   "peers": [
     {
-      "name": "org-b",
-      "endpoint": "https://localhost:4001"
+      "id": "org-b",
+      "endpoint": "https://localhost:3001"
     }
   ]
 }
 ```
 
 Based on this configuration:
-- Port 4000 will be used to access the API
-- Port 4001 will be used for P2P communications
-- The API key will be set to `yyyyy`
+- API will be accessed via localhost:4000
+- P2P communications will use localhost:4001
+- The API key will be set to `xxxxx` (this is optional)
 - There is one peer named `org-a` whose P2P endpoint is `https://localhost:3001`
 
 

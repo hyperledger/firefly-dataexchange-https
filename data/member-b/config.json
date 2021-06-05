@@ -1,11 +1,17 @@
 {
   "$schema": "../../src/schemas/config.json",
-  "apiPort": 4000,
-  "p2pPort": 4001,
-  "apiKey": "yyyyy",
+  "api": {
+    "hostname": "localhost",
+    "port": 4000
+  },
+  "p2p": {
+    "hostname": "localhost",
+    "port": 4001
+  },
+  "apiKey": "xxxxx",
   "peers": [
     {
-      "name": "org-a",
+      "id": "org-b",
       "endpoint": "https://localhost:3001"
     }
   ]
