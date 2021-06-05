@@ -61,6 +61,7 @@ router.get('/status', async (_req, res, next) => {
     for (const peer of config.peers) {
       status.peers.push({
         id: peer.id,
+        endpoint: peer.endpoint,
         available: responses[i++].status === 'fulfilled'
       })
     }
