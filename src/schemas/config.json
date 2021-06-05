@@ -2,14 +2,40 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "type": "object",
   "required": [
-    "apiPort",
-    "p2pPort",
-    "apiKey",
+    "api",
+    "p2p",
     "peers"
   ],
   "properties": {
-    "port": {
-      "type": "integer"
+    "api": {
+      "type": "object",
+      "required": [
+        "hostname",
+        "port"
+      ],
+      "properties": {
+        "hostname": {
+          "type": "string"
+        },
+        "port": {
+          "type": "integer"
+        }
+      }
+    },
+    "p2p": {
+      "type": "object",
+      "required": [
+        "hostname",
+        "port"
+      ],
+      "properties": {
+        "hostname": {
+          "type": "string"
+        },
+        "port": {
+          "type": "integer"
+        }
+      }
     },
     "apiKey": {
       "type": "string"
@@ -19,7 +45,7 @@
       "items": {
         "type": "object",
         "required": [
-          "name",
+          "id",
           "endpoint"
         ],
         "properties": {

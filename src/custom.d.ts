@@ -29,6 +29,7 @@ declare global{
         getPeerCertificate: () => {
           issuer: {
             O: string
+            OU: string
           }
         }
       }

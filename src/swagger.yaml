@@ -7,6 +7,24 @@
   servers:
     - url: /api/v1
   paths:
+    /id:
+      get:
+        tags:
+          - ID
+        description: Peer information
+        responses:
+          '200':
+            description: Peer information
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/PeerInformation'
+          '500':
+            description: Internal error
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/Error'
     /status:
       get:
         tags:
@@ -43,18 +61,18 @@
               application/json:
                 schema:
                   $ref: '#/components/schemas/Error'  
-    /peers/{name}:
+    /peers/{id}:
+      parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+        description: Peer id
       put:
         tags:
           - Peers
         description: Add peer
-        parameters:
-          - in: path
-            name: name
-            required: true
-            schema:
-              type: string
-            description: Peer name
         responses:
           '200':
             description: Peer added
@@ -78,13 +96,6 @@
         tags:
           - Peers
         description: Remove peer
-        parameters:
-          - in: path
-            name: name
-            required: true
-            schema:
-              type: string
-            description: Peer name
         responses:
           '200':
             description: Peer removed
@@ -250,6 +261,19 @@
         in: header
         name: X-API-KEY
     schemas:
+      PeerInformation:
+        type: object
+        required:
+          - id
+          - endpoint
+          - cert
+        properties:
+          id:
+            type: string
+          endpoint:
+            type: string
+          cert:
+            type: string
       Status:
         type: object
         required:
@@ -263,20 +287,20 @@
             items:
               type: object
               required:
-                - name
+                - id
                 - available
               properties:
-                name:
+                id:
                   type: string
                 available:
                   type: boolean
       Peer:
         type: object
         required:
-          - name
+          - id
           - endpoint
         properties:
-          name:
+          id:
             type: string
           endpoint:
             type: string

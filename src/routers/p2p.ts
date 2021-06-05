@@ -31,7 +31,7 @@ router.head('/ping', (_req, res) => {
 router.post('/messages', async (req, res, next) => {
   try {
     const cert = req.client.getPeerCertificate();
-    const sender = cert.issuer.O;
+    const sender = cert.issuer.O + cert.issuer.OU;
     const message = await utils.extractMessageFromMultipartForm(req);
     eventEmitter.emit('event', {
       type: 'message-received',
@@ -47,7 +47,7 @@ router.post('/messages', async (req, res, next) => {
 router.put('/blobs/*', async (req, res, next) => {
   try {
     const cert = req.client.getPeerCertificate();
-    const sender = cert.issuer.O;
+    const sender = cert.issuer.O + cert.issuer.OU;
     const file = await utils.extractFileFromMultipartForm(req);
     const blobPath = path.join(utils.constants.RECEIVED_BLOBS_SUBDIRECTORY, sender, req.params[0]);
     const hash = await blobsHandler.storeBlob(file, blobPath);

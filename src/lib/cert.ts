@@ -24,10 +24,13 @@ const log = createLogger({ name: 'lib/certs.ts', level: utils.constants.LOG_LEVE
 export let key: string;
 export let cert: string;
 export let ca: string[] = [];
+export let peerID: string;
 
 export const init = async () => {
   key = (await fs.readFile(path.join(utils.constants.DATA_DIRECTORY, utils.constants.KEY_FILE))).toString();
   cert = (await fs.readFile(path.join(utils.constants.DATA_DIRECTORY, utils.constants.CERT_FILE))).toString();
+  const certData = utils.getCertData(cert);
+  peerID = utils.getPeerID(certData.organization, certData.organizationUnit);
   await loadCAs();
 };
 
