@@ -56,7 +56,7 @@ export const start = async () => {
 
   const wss = new WebSocket.Server({
     server: apiServer, verifyClient: (info, cb) => {
-      if (info.req.headers['x-api-key'] === config.apiKey) {
+      if (config.api === undefined || info.req.headers['x-api-key'] === config.apiKey) {
         cb(true);
       } else {
         cb(false, 401, 'Unauthorized');
