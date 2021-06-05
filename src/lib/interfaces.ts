@@ -114,6 +114,7 @@ export interface IStatus {
   messageQueueSize: number
   peers: {
     id: string
+    endpoint: string
     available: boolean
   }[]
 }
