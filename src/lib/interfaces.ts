@@ -15,11 +15,17 @@
 // limitations under the License.
 
 export interface IConfig {
-  apiPort: number
-  p2pPort: number
-  apiKey: string
+  api: {
+    hostname: string
+    port: number
+  }
+  p2p: {
+    hostname: string
+    port: number
+  }
+  apiKey?: string
   peers: {
-    name: string
+    id: string
     endpoint: string
   }[]
 }
@@ -107,7 +113,12 @@ export type BlobTask = {
 export interface IStatus {
   messageQueueSize: number
   peers: {
-    name: string
+    id: string
     available: boolean
   }[]
+}
+
+export interface ICertData {
+  organization?: string
+  organizationUnit?: string
 }

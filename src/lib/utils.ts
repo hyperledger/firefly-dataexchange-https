@@ -16,11 +16,12 @@
 
 import { Request } from 'express';
 import { promises as fs } from 'fs';
-import { IFile } from './interfaces';
+import { ICertData, IFile } from './interfaces';
 import RequestError from './request-error';
 import Busboy from 'busboy';
 import axios, { AxiosRequestConfig } from 'axios';
 import { createLogger, LogLevelString } from 'bunyan';
+import { X509 } from 'jsrsasign';
 
 export const constants = {
   LOG_LEVEL: process.env.LOG_LEVEL || 'info',
@@ -114,4 +115,34 @@ export const axiosWithRetry = async (config: AxiosRequestConfig) => {
     }
   }
   throw currentError;
+};
+
+export const getPeerID = (organization: string | undefined, organizationUnit: string | undefined) => {
+  if(organization !== undefined) {
+    if(organizationUnit !== undefined) {
+      return `${organization}-${organizationUnit}`;
+    } else {
+      return organization;
+    }
+  } else if(organizationUnit !== undefined) {
+    return organizationUnit;
+  } else {
+    throw new Error('Invalid peer');
+  }
+};
+
+export const getCertData = (cert: string): ICertData => {
+  const x509 = new X509();
+  x509.readCertPEM(cert);
+  const subject = x509.getSubjectString();
+  const o = subject.match(/O=(.+[^/])/);
+  let certData: ICertData = {};
+  if(o !== null) {
+    certData.organization = o[1];
+  }
+  const ou = subject.match(/OU=(.+[^/])/);
+  if(ou !== null) {
+    certData.organizationUnit = ou[1];
+  }
+  return certData;
 };

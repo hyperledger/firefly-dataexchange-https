@@ -22,12 +22,24 @@ import RequestError from '../lib/request-error';
 import { config, persistConfig } from '../lib/config';
 import { IStatus } from '../lib/interfaces';
 import https from 'https';
-import { key, cert, ca, loadCAs } from '../lib/cert';
+import { key, cert, ca, loadCAs, peerID } from '../lib/cert';
 import * as eventsHandler from '../handlers/events';
 import { promises as fs } from 'fs';
 import path from 'path';
 
 export const router = Router();
+
+router.get('/id', async (_req, res, next) => {
+  try {
+    res.send({
+      id: peerID,
+      endpoint: `https://${config.p2p.hostname}:${config.p2p.port}`,
+      cert 
+    });
+  } catch (err) {
+    next(err);
+  }
+});
 
 router.get('/status', async (_req, res, next) => {
   try {
@@ -48,7 +60,7 @@ router.get('/status', async (_req, res, next) => {
     let i = 0;
     for (const peer of config.peers) {
       status.peers.push({
-        name: peer.name,
+        id: peer.id,
         available: responses[i++].status === 'fulfilled'
       })
     }
@@ -62,7 +74,7 @@ router.get('/peers', (_req, res) => {
   res.send(config.peers);
 });
 
-router.put('/peers/:name', async (req, res, next) => {
+router.put('/peers/:id', async (req, res, next) => {
   try {
     if (req.body.endpoint === undefined) {
       throw new RequestError('Missing endpoint', 400);
@@ -70,10 +82,10 @@ router.put('/peers/:name', async (req, res, next) => {
     if (req.body.certificate !== undefined) {
       await fs.writeFile(path.join(utils.constants.DATA_DIRECTORY, utils.constants.PEER_CERTS_SUBDIRECTORY, `${req.params.name}.pem`), req.body.certificate);
     }
-    let peer = config.peers.find(peer => peer.name === req.params.name);
+    let peer = config.peers.find(peer => peer.id === req.params.id);
     if (peer === undefined) {
       peer = {
-        name: req.params.name,
+        id: req.params.id,
         endpoint: req.body.endpoint
       };
       config.peers.push(peer);
@@ -86,9 +98,9 @@ router.put('/peers/:name', async (req, res, next) => {
   }
 });
 
-router.delete('/peers/:name', async (req, res, next) => {
+router.delete('/peers/:id', async (req, res, next) => {
   try {
-    if (!config.peers.some(peer => peer.name === req.params.name)) {
+    if (!config.peers.some(peer => peer.id === req.params.id)) {
       throw new RequestError('Peer not found', 404);
     }
     try {
@@ -98,7 +110,7 @@ router.delete('/peers/:name', async (req, res, next) => {
         throw new RequestError(`Failed to remove peer certificate`);
       }
     }
-    config.peers = config.peers.filter(peer => peer.name !== req.params.name);
+    config.peers = config.peers.filter(peer => peer.id !== req.params.id);
     await persistConfig();
     await loadCAs();
     res.send({ status: 'removed' });
@@ -115,7 +127,7 @@ router.post('/messages', async (req, res, next) => {
     if (req.body.recipient === undefined) {
       throw new RequestError('Missing recipient', 400);
     }
-    let recipientURL = config.peers.find(peer => peer.name === req.body.recipient)?.endpoint;
+    let recipientURL = config.peers.find(peer => peer.id === req.body.recipient)?.endpoint;
     if (recipientURL === undefined) {
       throw new RequestError(`Unknown recipient`, 400);
     }
@@ -169,7 +181,7 @@ router.post('/transfers', async (req, res, next) => {
     if (req.body.recipient === undefined) {
       throw new RequestError('Missing recipient', 400);
     }
-    let recipientURL = config.peers.find(peer => peer.name === req.body.recipient)?.endpoint;
+    let recipientURL = config.peers.find(peer => peer.id === req.body.recipient)?.endpoint;
     if (recipientURL === undefined) {
       throw new RequestError(`Unknown recipient`, 400);
     }
