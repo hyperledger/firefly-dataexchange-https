@@ -66,7 +66,8 @@ export const deliverMessage = async ({ message, recipient, recipientURL, request
       type: 'message-failed',
       message,
       recipient,
-      requestID
+      requestID,
+      error: err.message,
     } as IMessageFailedEvent);
     log.error(`Failed to deliver message ${err}`);
   }

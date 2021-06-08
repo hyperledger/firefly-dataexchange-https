@@ -105,7 +105,8 @@ export const deliverBlob = async ({ blobPath, recipient, recipientURL, requestID
       type: 'blob-failed',
       path: blobPath,
       recipient,
-      requestID
+      requestID,
+      error: err.message,
     } as IBlobFailedEvent);
     log.error(`Failed to deliver blob ${err}`);
   }
