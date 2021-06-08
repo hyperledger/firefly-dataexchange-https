@@ -21,5 +21,5 @@ import { start } from './app';
 const log = createLogger({ name: 'index.ts', level: utils.constants.LOG_LEVEL as LogLevelString });
 
 start().catch(err => {
-  log.error(`Failed to start blob exchange ${err}`);
+  log.error(`Failed to FireFly Data Exchange ${err}`);
 });
