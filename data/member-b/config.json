@@ -8,10 +8,10 @@
     "hostname": "localhost",
     "port": 4001
   },
-  "apiKey": "xxxxx",
+  "apiKey": "yyyyy",
   "peers": [
     {
-      "id": "org-b",
+      "id": "org-a",
       "endpoint": "https://localhost:3001"
     }
   ]
