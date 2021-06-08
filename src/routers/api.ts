@@ -82,7 +82,7 @@ router.put('/peers/:id', async (req, res, next) => {
       throw new RequestError('Missing endpoint', 400);
     }
     if (req.body.certificate !== undefined) {
-      await fs.writeFile(path.join(utils.constants.DATA_DIRECTORY, utils.constants.PEER_CERTS_SUBDIRECTORY, `${req.params.name}.pem`), req.body.certificate);
+      await fs.writeFile(path.join(utils.constants.DATA_DIRECTORY, utils.constants.PEER_CERTS_SUBDIRECTORY, `${req.params.id}.pem`), req.body.cert);
     }
     let peer = config.peers.find(peer => peer.id === req.params.id);
     if (peer === undefined) {
@@ -106,7 +106,7 @@ router.delete('/peers/:id', async (req, res, next) => {
       throw new RequestError('Peer not found', 404);
     }
     try {
-      await fs.rm(path.join(utils.constants.DATA_DIRECTORY, utils.constants.PEER_CERTS_SUBDIRECTORY, `${req.params.name}.pem`));
+      await fs.rm(path.join(utils.constants.DATA_DIRECTORY, utils.constants.PEER_CERTS_SUBDIRECTORY, `${req.params.id}.pem`));
     } catch (err) {
       if (err.errno !== -2) {
         throw new RequestError(`Failed to remove peer certificate`);
