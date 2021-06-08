@@ -23,11 +23,11 @@ Create `config.json` in the data directory and set its content to:
 {
   "$schema": "../../src/schemas/config.json",
   "api": {
-    "hostname": "localhost",
+    "hostname": "0.0.0.0",
     "port": 3000
   },
   "p2p": {
-    "hostname": "localhost",
+    "hostname": "0.0.0.0",
     "port": 3001
   },
   "apiKey": "xxxxx",
@@ -41,8 +41,8 @@ Create `config.json` in the data directory and set its content to:
 ```
 
 Based on this configuration:
-- API will be accessed via localhost:3000
-- P2P communications will use localhost:3001
+- API will be accessed via 0.0.0.0:3000
+- P2P communications will use 0.0.0.0:3001
 - The API key will be set to `xxxxx` (this is optional)
 - There is one peer named `org-b` whose P2P endpoint is `https://localhost:4001`
 
@@ -70,26 +70,26 @@ export LOG_LEVEL=info
 {
   "$schema": "../../src/schemas/config.json",
   "api": {
-    "hostname": "localhost",
+    "hostname": "0.0.0.0",
     "port": 4000
   },
   "p2p": {
-    "hostname": "localhost",
+    "hostname": "0.0.0.0",
     "port": 4001
   },
   "apiKey": "xxxxx",
   "peers": [
     {
       "id": "org-b",
-      "endpoint": "https://localhost:3001"
+      "endpoint": "https://0.0.0.0:3001"
     }
   ]
 }
 ```
 
 Based on this configuration:
-- API will be accessed via localhost:4000
-- P2P communications will use localhost:4001
+- API will be accessed via 0.0.0.0:4000
+- P2P communications will use 0.0.0.0:4001
 - The API key will be set to `xxxxx` (this is optional)
 - There is one peer named `org-a` whose P2P endpoint is `https://localhost:3001`
 
