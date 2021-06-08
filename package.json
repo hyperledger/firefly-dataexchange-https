@@ -1,7 +1,7 @@
 {
-  "name": "blob-exchange",
+  "name": "firefly-dataexchange",
   "version": "1.0.0",
-  "description": "Blob Exchange",
+  "description": "FireFly Data Exchange",
   "main": "index.js",
   "scripts": {
     "clean": "rimraf ./build",
@@ -10,6 +10,10 @@
     "start:dev": "nodemon",
     "start": "node build/index.js",
     "dev": "ts-node src/index.ts"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kaleido-io/firefly-dataexchange-https"
   },
   "keywords": [],
   "author": "",
