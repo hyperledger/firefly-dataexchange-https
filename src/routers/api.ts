@@ -26,6 +26,7 @@ import { key, cert, ca, loadCAs, peerID } from '../lib/cert';
 import * as eventsHandler from '../handlers/events';
 import { promises as fs } from 'fs';
 import path from 'path';
+import { v4 as uuidV4 } from 'uuid';
 
 export const router = Router();
 
@@ -132,12 +133,12 @@ router.post('/messages', async (req, res, next) => {
     if (recipientURL === undefined) {
       throw new RequestError(`Unknown recipient`, 400);
     }
-    let requestID: string | undefined = undefined;
+    let requestID = uuidV4();
     if(typeof req.body.requestID === 'string') {
       requestID = req.body.requestID;
     }
     messagesHandler.sendMessage(req.body.message, req.body.recipient, recipientURL, requestID);
-    res.send({ status: 'submitted' });
+    res.send({ requestID });
   } catch (err) {
     next(err);
   }
@@ -186,12 +187,12 @@ router.post('/transfers', async (req, res, next) => {
     if (recipientURL === undefined) {
       throw new RequestError(`Unknown recipient`, 400);
     }
-    let requestID: string | undefined = undefined;
+    let requestID = uuidV4();
     if(typeof req.body.requestID === 'string') {
       requestID = req.body.requestID;
     }
     blobsHandler.sendBlob(req.body.path, req.body.recipient, recipientURL, requestID);
-    res.send({ status: 'submitted' });
+    res.send({ requestID });
   } catch (err) {
     next(err);
   }
