@@ -91,7 +91,12 @@ export const start = async () => {
       webSocket.send(JSON.stringify(event));
     }
     webSocket.on('close', () => {
-      assignWebSocketDelegate(wss.clients.values().next().value);
+      if (delegatedWebSocket == webSocket) {
+        const ws = wss.clients.values().next().value;
+        if (ws) {
+          assignWebSocketDelegate(ws);
+        }          
+      }
     });
   };
 
