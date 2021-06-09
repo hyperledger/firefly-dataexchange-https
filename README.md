@@ -46,6 +46,9 @@ Based on this configuration:
 - The API key will be set to `xxxxx` (this is optional)
 - There is one peer named `org-b` whose P2P endpoint is `https://localhost:4001`
 
+Note: the property `p2p.endpoint` can optionally be used to specify a front facing endpoint.
+If this property is not provided, the p2p endpoint will be calculated as `p2p.hostname`:`p2p.port`
+
 #### Generate certificate
 
 In the data directory, run the following command:
@@ -93,6 +96,8 @@ Based on this configuration:
 - The API key will be set to `xxxxx` (this is optional)
 - There is one peer named `org-a` whose P2P endpoint is `https://localhost:3001`
 
+Note: the property `p2p.endpoint` can optionally be used to specify a front facing endpoint.
+If this property is not provided, the p2p endpoint will be calculated as `p2p.hostname`:`p2p.port`
 
 #### Generate certificate
 

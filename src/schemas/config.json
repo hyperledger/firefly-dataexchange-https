@@ -34,6 +34,9 @@
         },
         "port": {
           "type": "integer"
+        },
+        "endpoint": {
+          "type": "string"
         }
       }
     },

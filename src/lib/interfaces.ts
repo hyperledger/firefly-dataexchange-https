@@ -22,6 +22,7 @@ export interface IConfig {
   p2p: {
     hostname: string
     port: number
+    endpoint?: string
   }
   apiKey?: string
   peers: {
