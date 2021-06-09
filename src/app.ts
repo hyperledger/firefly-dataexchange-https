@@ -75,6 +75,7 @@ export const start = async () => {
   });
 
   const assignWebSocketDelegate = (webSocket: WebSocket) => {
+    log.info('New WebSocket delegate assigned');
     delegatedWebSocket = webSocket;
     const event = eventsHandler.getCurrentEvent();
     webSocket.on('message', async message => {
@@ -91,6 +92,7 @@ export const start = async () => {
       webSocket.send(JSON.stringify(event));
     }
     webSocket.on('close', () => {
+      log.info('WebSocket delegate disconnected');
       const nextDelegatedWebSocket = wss.clients.values().next().value;
       if (nextDelegatedWebSocket) {
         assignWebSocketDelegate(nextDelegatedWebSocket);
@@ -101,9 +103,13 @@ export const start = async () => {
   };
 
   wss.on('connection', (webSocket: WebSocket) => {
+    log.info(`New WebSocket client connected (client count: ${wss.clients.size})`);
     if (delegatedWebSocket === undefined) {
       assignWebSocketDelegate(webSocket);
     }
+    webSocket.on('close', () => {
+      log.info(`WebSocket client disconnected (client count: ${wss.clients.size})`);
+    });
   });
 
   apiApp.use('/swagger', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
