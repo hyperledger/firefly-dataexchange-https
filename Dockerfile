@@ -1,8 +1,7 @@
 FROM node:14-alpine3.11 as firefly-dataexchange-builder
-RUN apk add git
+RUN apk add --update python make
 ADD . /firefly-dataexchange-https
 WORKDIR /firefly-dataexchange-https
-RUN apk add --update python make
 RUN npm install
 RUN npm run build
 
