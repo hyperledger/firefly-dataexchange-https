@@ -81,7 +81,7 @@ router.put('/peers/:id', async (req, res, next) => {
     if (req.body.endpoint === undefined) {
       throw new RequestError('Missing endpoint', 400);
     }
-    if (req.body.certificate !== undefined) {
+    if (req.body.cert !== undefined) {
       await fs.writeFile(path.join(utils.constants.DATA_DIRECTORY, utils.constants.PEER_CERTS_SUBDIRECTORY, `${req.params.id}.pem`), req.body.cert);
     }
     let peer = config.peers.find(peer => peer.id === req.params.id);
