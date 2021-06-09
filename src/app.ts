@@ -91,11 +91,11 @@ export const start = async () => {
       webSocket.send(JSON.stringify(event));
     }
     webSocket.on('close', () => {
-      if (delegatedWebSocket == webSocket) {
-        const ws = wss.clients.values().next().value;
-        if (ws) {
-          assignWebSocketDelegate(ws);
-        }          
+      const nextDelegatedWebSocket = wss.clients.values().next().value;
+      if (nextDelegatedWebSocket) {
+        assignWebSocketDelegate(nextDelegatedWebSocket);
+      } else {
+        delegatedWebSocket = undefined;
       }
     });
   };
