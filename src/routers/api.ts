@@ -34,7 +34,7 @@ router.get('/id', async (_req, res, next) => {
   try {
     res.send({
       id: peerID,
-      endpoint: `https://${config.p2p.hostname}:${config.p2p.port}`,
+      endpoint: config.p2p.endpoint ?? `https://${config.p2p.hostname}:${config.p2p.port}`,
       cert 
     });
   } catch (err) {
