@@ -1,6 +1,6 @@
 FROM node:14-alpine3.11 as firefly-dataexchange-builder
 RUN apk add git
-RUN git clone https://github.com/kaleido-io/firefly-dataexchange-https.git
+ADD . /firefly-dataexchange-https
 WORKDIR /firefly-dataexchange-https
 RUN apk add --update python make
 RUN npm install
