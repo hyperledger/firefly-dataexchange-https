@@ -31,7 +31,7 @@ router.head('/ping', (_req, res) => {
 router.post('/messages', async (req, res, next) => {
   try {
     const cert = req.client.getPeerCertificate();
-    const sender = cert.issuer.O + cert.issuer.OU;
+    const sender = utils.getPeerID(cert.issuer.O, cert.issuer.OU);
     const message = await utils.extractMessageFromMultipartForm(req);
     eventEmitter.emit('event', {
       type: 'message-received',
