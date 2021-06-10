@@ -22,13 +22,19 @@ import RequestError from '../lib/request-error';
 import { config, persistConfig } from '../lib/config';
 import { IStatus } from '../lib/interfaces';
 import https from 'https';
-import { key, cert, ca, peerID, resetCAs } from '../lib/cert';
+import { key, cert, ca, peerID } from '../lib/cert';
 import * as eventsHandler from '../handlers/events';
 import { promises as fs } from 'fs';
 import path from 'path';
 import { v4 as uuidV4 } from 'uuid';
 
 export const router = Router();
+
+let resetP2PCAs: () => void;
+
+export const setResetP2PCAs = (_resetP2PCAs: () => void) => {
+  resetP2PCAs = _resetP2PCAs
+}
 
 router.get('/id', async (_req, res, next) => {
   try {
@@ -93,7 +99,7 @@ router.put('/peers/:id', async (req, res, next) => {
       config.peers.push(peer);
     }
     await persistConfig();
-    await resetCAs();
+    await resetP2PCAs();
     res.send({ status: 'added' });
   } catch (err) {
     next(err);
@@ -114,7 +120,7 @@ router.delete('/peers/:id', async (req, res, next) => {
     }
     config.peers = config.peers.filter(peer => peer.id !== req.params.id);
     await persistConfig();
-    await resetCAs();
+    await resetP2PCAs();
     res.send({ status: 'removed' });
   } catch (err) {
     next(err);

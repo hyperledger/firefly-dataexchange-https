@@ -15,14 +15,14 @@
 // limitations under the License.
 
 import express from 'express';
-import https from 'https';
+import https, { Server } from 'https';
 import http from 'http';
 import WebSocket from 'ws';
 import { init as initConfig, config } from './lib/config';
-import { init as initCert, genTLSContext } from './lib/cert';
+import { init as initCert, genTLSContext, loadCAs } from './lib/cert';
 import { createLogger, LogLevelString } from 'bunyan';
 import * as utils from './lib/utils';
-import { router as apiRouter } from './routers/api';
+import { router as apiRouter, setResetP2PCAs } from './routers/api';
 import { router as p2pRouter, eventEmitter as p2pEventEmitter } from './routers/p2p';
 import RequestError, { errorHandler } from './lib/request-error';
 import * as eventsHandler from './handlers/events'
@@ -36,7 +36,16 @@ const log = createLogger({ name: 'app.ts', level: utils.constants.LOG_LEVEL as L
 
 const swaggerDocument = YAML.load(path.join(__dirname, './swagger.yaml'));
 
+let p2pServer : Server
+
 let delegatedWebSocket: WebSocket | undefined = undefined;
+
+export const resetP2PCAs = async () => {
+  loadCAs()
+  // The most recent context wins (per the Node.js spec), so to get a reload we just add a wildcard context
+  p2pServer.addContext("*", genTLSContext())
+};
+setResetP2PCAs(resetP2PCAs)
 
 export const start = async () => {
   await initConfig();
@@ -46,7 +55,7 @@ export const start = async () => {
   const apiServer = http.createServer(apiApp);
 
   const p2pApp = express();
-  const p2pServer = https.createServer(genTLSContext(), p2pApp);
+  p2pServer = https.createServer(genTLSContext(), p2pApp);
 
   const wss = new WebSocket.Server({
     server: apiServer, verifyClient: (info, cb) => {
