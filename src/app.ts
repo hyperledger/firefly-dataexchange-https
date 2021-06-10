@@ -19,7 +19,7 @@ import https from 'https';
 import http from 'http';
 import WebSocket from 'ws';
 import { init as initConfig, config } from './lib/config';
-import { init as initCert, key, cert, ca, genTLSContext } from './lib/cert';
+import { init as initCert, genTLSContext } from './lib/cert';
 import { createLogger, LogLevelString } from 'bunyan';
 import * as utils from './lib/utils';
 import { router as apiRouter } from './routers/api';
