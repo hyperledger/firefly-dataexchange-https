@@ -19,7 +19,7 @@ import https from 'https';
 import http from 'http';
 import WebSocket from 'ws';
 import { init as initConfig, config } from './lib/config';
-import { init as initCert, key, cert, ca } from './lib/cert';
+import { init as initCert, key, cert, ca, genTLSContext } from './lib/cert';
 import { createLogger, LogLevelString } from 'bunyan';
 import * as utils from './lib/utils';
 import { router as apiRouter } from './routers/api';
@@ -46,13 +46,7 @@ export const start = async () => {
   const apiServer = http.createServer(apiApp);
 
   const p2pApp = express();
-  const p2pServer = https.createServer({
-    key,
-    cert,
-    ca,
-    rejectUnauthorized: true,
-    requestCert: true,
-  }, p2pApp);
+  const p2pServer = https.createServer(genTLSContext(), p2pApp);
 
   const wss = new WebSocket.Server({
     server: apiServer, verifyClient: (info, cb) => {

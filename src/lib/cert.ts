@@ -18,6 +18,7 @@ import * as utils from '../lib/utils';
 import { promises as fs } from 'fs';
 import path from 'path';
 import { createLogger, LogLevelString } from 'bunyan';
+import { Server } from 'https';
 
 const log = createLogger({ name: 'lib/certs.ts', level: utils.constants.LOG_LEVEL as LogLevelString });
 
@@ -41,4 +42,21 @@ export const loadCAs = async () => {
     ca.push((await fs.readFile(path.join(peerCertsPath, peerCert))).toString());
   }
   log.debug(`Loaded ${ca.length} peer certificate(s)`);
+};
+
+
+export const genTLSContext = () => {
+  return {
+    key,
+    cert,
+    ca,
+    rejectUnauthorized: true,
+    requestCert: true,
+  }
+}
+
+export const resetCAs = async (server: Server) => {
+  loadCAs()
+  // The most recent context wins (per the Node.js spec), so to get a reload we just add a wildcard context
+  server.addContext("*", genTLSContext())
 };
