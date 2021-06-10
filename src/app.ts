@@ -22,7 +22,7 @@ import { init as initConfig, config } from './lib/config';
 import { init as initCert, genTLSContext, loadCAs } from './lib/cert';
 import { createLogger, LogLevelString } from 'bunyan';
 import * as utils from './lib/utils';
-import { router as apiRouter, setResetP2PCAs } from './routers/api';
+import { router as apiRouter, setAddTLSContext } from './routers/api';
 import { router as p2pRouter, eventEmitter as p2pEventEmitter } from './routers/p2p';
 import RequestError, { errorHandler } from './lib/request-error';
 import * as eventsHandler from './handlers/events'
@@ -40,12 +40,12 @@ let p2pServer : Server
 
 let delegatedWebSocket: WebSocket | undefined = undefined;
 
-export const resetP2PCAs = async () => {
-  loadCAs()
+export const addTLSContext = async (hostname: string) => {
+  await loadCAs()
   // The most recent context wins (per the Node.js spec), so to get a reload we just add a wildcard context
-  p2pServer.addContext("*", genTLSContext())
+  p2pServer.addContext(hostname, genTLSContext())
 };
-setResetP2PCAs(resetP2PCAs)
+setAddTLSContext(addTLSContext)
 
 export const start = async () => {
   await initConfig();
