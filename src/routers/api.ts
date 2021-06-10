@@ -27,13 +27,14 @@ import * as eventsHandler from '../handlers/events';
 import { promises as fs } from 'fs';
 import path from 'path';
 import { v4 as uuidV4 } from 'uuid';
+import { URL } from 'url';
 
 export const router = Router();
 
-let resetP2PCAs: () => void;
+let addTLSContext: (hostname: string) => Promise<void>;
 
-export const setResetP2PCAs = (_resetP2PCAs: () => void) => {
-  resetP2PCAs = _resetP2PCAs
+export const setAddTLSContext = (_addTLSContext: (hostname: string) => Promise<void>) => {
+  addTLSContext = _addTLSContext;
 }
 
 router.get('/id', async (_req, res, next) => {
@@ -99,7 +100,8 @@ router.put('/peers/:id', async (req, res, next) => {
       config.peers.push(peer);
     }
     await persistConfig();
-    await resetP2PCAs();
+    let url = new URL(req.body.endpoint)
+    await addTLSContext(url.hostname);
     res.send({ status: 'added' });
   } catch (err) {
     next(err);
@@ -120,7 +122,6 @@ router.delete('/peers/:id', async (req, res, next) => {
     }
     config.peers = config.peers.filter(peer => peer.id !== req.params.id);
     await persistConfig();
-    await resetP2PCAs();
     res.send({ status: 'removed' });
   } catch (err) {
     next(err);
