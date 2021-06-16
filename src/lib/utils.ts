@@ -28,6 +28,7 @@ export const constants = {
   DATA_DIRECTORY: process.env.DATA_DIRECTORY || '/data',
   PEER_CERTS_SUBDIRECTORY: 'peer-certs',
   BLOBS_SUBDIRECTORY: 'blobs',
+  METADATA_SUFFIX: '.metadata.json',
   RECEIVED_BLOBS_SUBDIRECTORY: 'received',
   CONFIG_FILE_NAME: 'config.json',
   CERT_FILE: 'cert.pem',
@@ -36,7 +37,9 @@ export const constants = {
   TRANSFER_HASH_ALGORITHM: 'sha256',
   REST_API_CALL_MAX_ATTEMPTS: 5,
   REST_API_CALL_RETRY_DELAY_MS: 500,
-  MAX_EVENT_QUEUE_SIZE: 1000
+  MAX_EVENT_QUEUE_SIZE: 1000,
+  HASH_HEADER_NAME: 'dx-hash',
+  LAST_UPDATE_HEADER_NAME: 'dx-last-update'
 };
 const log = createLogger({ name: 'utils.ts', level: constants.LOG_LEVEL as LogLevelString });
 

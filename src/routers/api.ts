@@ -151,13 +151,31 @@ router.post('/messages', async (req, res, next) => {
   }
 });
 
+router.head('/blobs/*', async (req, res, next) => {
+  try {
+    const blobPath = `/${req.params[0]}`;
+    if (!utils.regexp.FILE_KEY.test(blobPath) || utils.regexp.CONSECUTIVE_DOTS.test(blobPath)) {
+      throw new RequestError('Invalid path', 400);
+    }
+    const metadata = await blobsHandler.retreiveMetadata(blobPath);
+    res.setHeader(utils.constants.HASH_HEADER_NAME, metadata.hash);
+    res.setHeader(utils.constants.LAST_UPDATE_HEADER_NAME, metadata.lastUpdate);
+    res.status(204).send();
+  } catch (err) {
+    next(err);
+  }
+});
+
 router.get('/blobs/*', async (req, res, next) => {
   try {
     const blobPath = `/${req.params[0]}`;
     if (!utils.regexp.FILE_KEY.test(blobPath) || utils.regexp.CONSECUTIVE_DOTS.test(blobPath)) {
       throw new RequestError('Invalid path', 400);
     }
-    let blobStream = await blobsHandler.retreiveBlob(blobPath);
+    const metadata = await blobsHandler.retreiveMetadata(blobPath);
+    res.setHeader(utils.constants.HASH_HEADER_NAME, metadata.hash);
+    res.setHeader(utils.constants.LAST_UPDATE_HEADER_NAME, metadata.lastUpdate);
+    const blobStream = await blobsHandler.retreiveBlob(blobPath);
     blobStream.on('end', () => res.end());
     blobStream.pipe(res);
   } catch (err) {
