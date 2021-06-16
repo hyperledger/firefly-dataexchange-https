@@ -190,8 +190,8 @@ router.put('/blobs/*', async (req, res, next) => {
       throw new RequestError('Invalid path', 400);
     }
     const file = await utils.extractFileFromMultipartForm(req);
-    const hash = await blobsHandler.storeBlob(file, blobPath);
-    res.send({ hash });
+    const metadata = await blobsHandler.storeBlob(file, blobPath);
+    res.send(metadata);
   } catch (err) {
     next(err);
   }
