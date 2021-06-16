@@ -146,20 +146,49 @@
                 schema:
                   $ref: '#/components/schemas/Error'   
     /blobs/{blobPath}:
+      parameters:
+      - in: path
+        name: blobPath
+        required: true
+        schema:
+          type: string
+        description: Blob path
+      head:
+        tags:
+          - Blobs
+        description: Retrieve blob metadata
+        responses:
+          '204':
+            description: Blob metadata
+            headers:
+              dx-hash:
+                schema:
+                  type: string
+                description: Blob hash
+              dx-last-update:
+                schema:
+                  type: string
+                description: Blob last update timestamp
+          '404':
+            description: Blob not found
+          '500':
+            description: Internal error
       get:
         tags:
           - Blobs
         description: Retreive blob
-        parameters:
-          - in: path
-            name: blobPath
-            required: true
-            schema:
-              type: string
-            description: Blob path
         responses:
           '200':
             description: Blob content
+            headers:
+              dx-hash:
+                schema:
+                  type: string
+                description: Blob hash
+              dx-last-update:
+                schema:
+                  type: string
+                description: Blob last update timestamp
             content:
               application/json:
                 schema:
@@ -181,13 +210,6 @@
         tags:
           - Blobs
         description: Store blob
-        parameters:
-          - in: path
-            name: blobPath
-            required: true
-            schema:
-              type: string
-            description: Blob path
         requestBody:
           description: Blob
           required: true
