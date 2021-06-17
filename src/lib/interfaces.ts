@@ -124,3 +124,8 @@ export interface ICertData {
   organization?: string
   organizationUnit?: string
 }
+
+export interface IMetadata {
+  hash: string
+  lastUpdate: number
+}

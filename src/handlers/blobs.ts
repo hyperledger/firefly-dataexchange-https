@@ -17,7 +17,7 @@
 import { promises as fs, createReadStream, createWriteStream } from 'fs';
 import path from 'path';
 import * as utils from '../lib/utils';
-import { BlobTask, IBlobDeliveredEvent, IBlobFailedEvent, IFile } from "../lib/interfaces";
+import { BlobTask, IBlobDeliveredEvent, IBlobFailedEvent, IFile, IMetadata } from "../lib/interfaces";
 import stream from 'stream';
 import RequestError from '../lib/request-error';
 import crypto from 'crypto';
@@ -36,7 +36,7 @@ export const eventEmitter = new EventEmitter();
 export const retreiveBlob = async (filePath: string) => {
   const resolvedFilePath = path.join(utils.constants.DATA_DIRECTORY, utils.constants.BLOBS_SUBDIRECTORY, filePath);
   if (!(await utils.fileExists(resolvedFilePath))) {
-    throw new RequestError(`Blob not found`, 404);
+    throw new RequestError(`Blob content missing from storage`, 404);
   }
   return createReadStream(resolvedFilePath);
 };
@@ -52,7 +52,7 @@ export const storeBlob = async (file: IFile, filePath: string) => {
     }
   });
   const writeStream = createWriteStream(resolvedFilePath);
-  return new Promise<string>((resolve, reject) => {
+  const blobHash = await new Promise<string>((resolve, reject) => {
     file.readableStream.on('end', () => {
       resolve(hash.digest('hex'));
     }).on('error', err => {
@@ -60,6 +60,7 @@ export const storeBlob = async (file: IFile, filePath: string) => {
     });
     file.readableStream.pipe(hashCalculator).pipe(writeStream);
   });
+  return await upsertMetadata(filePath, blobHash);
 };
 
 export const sendBlob = async (blobPath: string, recipient: string, recipientURL: string, requestID: string | undefined) => {
@@ -110,4 +111,28 @@ export const deliverBlob = async ({ blobPath, recipient, recipientURL, requestID
     } as IBlobFailedEvent);
     log.error(`Failed to deliver blob ${err}`);
   }
+};
+
+export const retreiveMetadata = async (filePath: string) => {
+  const resolvedFilePath = path.join(utils.constants.DATA_DIRECTORY, utils.constants.BLOBS_SUBDIRECTORY, filePath + utils.constants.METADATA_SUFFIX);
+  if (!(await utils.fileExists(resolvedFilePath))) {
+    throw new RequestError(`Blob not found`, 404);
+  }
+  try {
+    const metadataString = await fs.readFile(resolvedFilePath);
+    return JSON.parse(metadataString.toString()) as IMetadata;
+  } catch(err) {
+    throw new RequestError(`Invalid blob`);
+  }
+};
+
+export const upsertMetadata = async (filePath: string, hash: string) => {
+  const resolvedFilePath = path.join(utils.constants.DATA_DIRECTORY, utils.constants.BLOBS_SUBDIRECTORY, filePath + utils.constants.METADATA_SUFFIX);
+  await fs.mkdir(path.parse(resolvedFilePath).dir, { recursive: true });
+  let metadata: IMetadata = {
+    hash,
+    lastUpdate: new Date().getTime()
+  };
+  await fs.writeFile(resolvedFilePath, JSON.stringify(metadata));
+  return metadata;
 };
