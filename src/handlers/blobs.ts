@@ -45,17 +45,19 @@ export const storeBlob = async (file: IFile, filePath: string) => {
   const resolvedFilePath = path.join(utils.constants.DATA_DIRECTORY, utils.constants.BLOBS_SUBDIRECTORY, filePath);
   await fs.mkdir(path.parse(resolvedFilePath).dir, { recursive: true });
   let hash = crypto.createHash(utils.constants.TRANSFER_HASH_ALGORITHM);
-  let hashCalculator = new stream.Transform({
-    async transform(chunk, _enc, cb) {
-      hash.update(chunk);
-      cb(undefined, chunk);
-    }
-  });
   const writeStream = createWriteStream(resolvedFilePath);
   const blobHash = await new Promise<string>((resolve, reject) => {
-    file.readableStream.on('end', () => {
-      resolve(hash.digest('hex'));
-    }).on('error', err => {
+    let hashCalculator = new stream.Transform({
+      transform(chunk, _enc, cb) {
+        hash.update(chunk);
+        cb(undefined, chunk);
+      },
+      flush(cb) {
+        resolve(hash.digest('hex'));
+        cb();
+      }
+    });
+      file.readableStream.on('error', err => {
       reject(err);
     });
     file.readableStream.pipe(hashCalculator).pipe(writeStream);
