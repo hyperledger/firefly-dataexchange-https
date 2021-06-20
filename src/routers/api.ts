@@ -153,7 +153,8 @@ router.post('/messages', async (req, res, next) => {
 
 router.head('/blobs/*', async (req, res, next) => {
   try {
-    const blobPath = `/${req.params[0]}`;
+    const p: any = req.params
+    const blobPath = `/${p[0]}`;
     if (!utils.regexp.FILE_KEY.test(blobPath) || utils.regexp.CONSECUTIVE_DOTS.test(blobPath)) {
       throw new RequestError('Invalid path', 400);
     }
@@ -168,7 +169,8 @@ router.head('/blobs/*', async (req, res, next) => {
 
 router.get('/blobs/*', async (req, res, next) => {
   try {
-    const blobPath = `/${req.params[0]}`;
+    const p: any = req.params
+    const blobPath = `/${p[0]}`;
     if (!utils.regexp.FILE_KEY.test(blobPath) || utils.regexp.CONSECUTIVE_DOTS.test(blobPath)) {
       throw new RequestError('Invalid path', 400);
     }
@@ -185,7 +187,8 @@ router.get('/blobs/*', async (req, res, next) => {
 
 router.put('/blobs/*', async (req, res, next) => {
   try {
-    const blobPath = `/${req.params[0]}`;
+    const p: any = req.params
+    const blobPath = `/${p[0]}`;
     if (!utils.regexp.FILE_KEY.test(blobPath) || utils.regexp.CONSECUTIVE_DOTS.test(blobPath)) {
       throw new RequestError('Invalid path', 400);
     }
