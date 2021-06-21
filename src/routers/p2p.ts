@@ -20,6 +20,7 @@ import * as blobsHandler from '../handlers/blobs';
 import path from 'path';
 import { EventEmitter } from 'events';
 import { IBlobReceivedEvent, IMessageReceivedEvent } from '../lib/interfaces';
+import { v4 as uuidV4 } from 'uuid';
 
 export const router = Router();
 export const eventEmitter = new EventEmitter();
@@ -35,6 +36,7 @@ router.post('/messages', async (req, res, next) => {
     const sender = utils.getPeerID(cert.issuer.O, cert.issuer.OU);
     const message = await utils.extractMessageFromMultipartForm(req);
     eventEmitter.emit('event', {
+      id: uuidV4(),
       type: 'message-received',
       sender,
       message
@@ -56,6 +58,7 @@ router.put('/blobs/*', async (req, res, next) => {
     const metadata = await blobsHandler.storeBlob(file, blobPath);
     res.sendStatus(204);
     eventEmitter.emit('event', {
+      id: uuidV4(),
       type: 'blob-received',
       sender,
       path: blobPath,

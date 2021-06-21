@@ -46,18 +46,21 @@ export type OutboundEvent =
   IBlobFailedEvent
 
 export interface IMessageReceivedEvent {
+  id: string
   type: 'message-received'
   sender: string
   message: string
 }
 
 export interface IMessageDeliveredEvent {
+  id: string
   type: 'message-delivered'
   recipient: string
   message: string
 }
 
 export interface IMessageFailedEvent {
+  id: string
   type: 'message-failed'
   recipient: string
   message: string
@@ -65,6 +68,7 @@ export interface IMessageFailedEvent {
 }
 
 export interface IBlobReceivedEvent {
+  id: string
   type: 'blob-received'
   sender: string
   path: string
@@ -72,12 +76,14 @@ export interface IBlobReceivedEvent {
 }
 
 export interface IBlobDeliveredEvent {
+  id: string
   type: 'blob-delivered'
   recipient: string
   path: string
 }
 
 export interface IBlobFailedEvent {
+  id: string
   type: 'blob-failed'
   recipient: string
   path: string

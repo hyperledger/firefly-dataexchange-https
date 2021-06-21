@@ -21,6 +21,7 @@ import { IMessageDeliveredEvent, IMessageFailedEvent, MessageTask } from '../lib
 import FormData from 'form-data';
 import EventEmitter from 'events';
 import { createLogger, LogLevelString } from 'bunyan';
+import { v4 as uuidV4 } from 'uuid';
 
 const log = createLogger({ name: 'handlers/messages.ts', level: utils.constants.LOG_LEVEL as LogLevelString });
 
@@ -55,6 +56,7 @@ export const deliverMessage = async ({ message, recipient, recipientURL, request
       httpsAgent
     });
     eventEmitter.emit('event', {
+      id: uuidV4(),
       type: 'message-delivered',
       message,
       recipient,
@@ -63,6 +65,7 @@ export const deliverMessage = async ({ message, recipient, recipientURL, request
     log.trace(`Message delivered`);
   } catch(err) {
     eventEmitter.emit('event', {
+      id: uuidV4(),
       type: 'message-failed',
       message,
       recipient,
