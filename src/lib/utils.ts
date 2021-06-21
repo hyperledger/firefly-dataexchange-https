@@ -14,14 +14,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import axios, { AxiosRequestConfig } from 'axios';
+import Busboy from 'busboy';
 import { Request } from 'express';
 import { promises as fs } from 'fs';
-import { ICertData, IFile } from './interfaces';
-import RequestError from './request-error';
-import Busboy from 'busboy';
-import axios, { AxiosRequestConfig } from 'axios';
-import { createLogger, LogLevelString } from 'bunyan';
 import { X509 } from 'jsrsasign';
+import { ICertData, IFile } from './interfaces';
+import { Logger } from './logger';
+import RequestError from './request-error';
 
 export const constants = {
   LOG_LEVEL: process.env.LOG_LEVEL || 'info',
@@ -41,7 +41,7 @@ export const constants = {
   HASH_HEADER_NAME: 'dx-hash',
   LAST_UPDATE_HEADER_NAME: 'dx-last-update'
 };
-const log = createLogger({ name: 'utils.ts', level: constants.LOG_LEVEL as LogLevelString });
+const log = new Logger('utils.ts')
 
 export const regexp = {
   FILE_KEY: /^(\/[a-z0-9\+\-\_\.]+)+$/,

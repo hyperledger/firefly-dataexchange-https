@@ -14,11 +14,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { createLogger, LogLevelString } from 'bunyan';
-import * as utils from './lib/utils';
 import { start } from './app';
+import { Logger } from './lib/logger';
 
-const log = createLogger({ name: 'index.ts', level: utils.constants.LOG_LEVEL as LogLevelString });
+const log = new Logger("index.ts")
 
 start().catch(err => {
   log.error(`Failed to FireFly Data Exchange ${err}`);

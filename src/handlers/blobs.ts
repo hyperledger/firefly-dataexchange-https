@@ -14,21 +14,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { promises as fs, createReadStream, createWriteStream } from 'fs';
-import path from 'path';
-import * as utils from '../lib/utils';
-import { BlobTask, IBlobDeliveredEvent, IBlobFailedEvent, IFile, IMetadata } from "../lib/interfaces";
-import stream from 'stream';
-import RequestError from '../lib/request-error';
 import crypto from 'crypto';
-import FormData from 'form-data';
-import https from 'https';
-import { key, cert, ca } from '../lib/cert';
-import { createLogger, LogLevelString } from 'bunyan';
 import EventEmitter from 'events';
+import FormData from 'form-data';
+import { createReadStream, createWriteStream, promises as fs } from 'fs';
+import https from 'https';
+import path from 'path';
+import stream from 'stream';
 import { v4 as uuidV4 } from 'uuid';
+import { ca, cert, key } from '../lib/cert';
+import { BlobTask, IBlobDeliveredEvent, IBlobFailedEvent, IFile, IMetadata } from "../lib/interfaces";
+import { Logger } from '../lib/logger';
+import RequestError from '../lib/request-error';
+import * as utils from '../lib/utils';
 
-const log = createLogger({ name: 'handlers/blobs.ts', level: utils.constants.LOG_LEVEL as LogLevelString });
+const log = new Logger("handlers/blobs.ts")
 
 let blobQueue: BlobTask[] = [];
 let sending = false;

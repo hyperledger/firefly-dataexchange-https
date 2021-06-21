@@ -15,24 +15,24 @@
 // limitations under the License.
 
 import express from 'express';
-import https, { Server } from 'https';
 import http from 'http';
+import https, { Server } from 'https';
+import path from 'path';
+import swaggerUi from 'swagger-ui-express';
 import WebSocket from 'ws';
-import { init as initConfig, config } from './lib/config';
-import { init as initCert, genTLSContext, loadCAs } from './lib/cert';
-import { createLogger, LogLevelString } from 'bunyan';
+import YAML from 'yamljs';
+import { eventEmitter as blobsEventEmitter } from './handlers/blobs';
+import * as eventsHandler from './handlers/events';
+import { eventEmitter as messagesEventEmitter } from './handlers/messages';
+import { genTLSContext, init as initCert, loadCAs } from './lib/cert';
+import { config, init as initConfig } from './lib/config';
+import { Logger } from './lib/logger';
+import RequestError, { errorHandler } from './lib/request-error';
 import * as utils from './lib/utils';
 import { router as apiRouter, setAddTLSContext } from './routers/api';
-import { router as p2pRouter, eventEmitter as p2pEventEmitter } from './routers/p2p';
-import RequestError, { errorHandler } from './lib/request-error';
-import * as eventsHandler from './handlers/events'
-import { eventEmitter as blobsEventEmitter } from './handlers/blobs';
-import { eventEmitter as messagesEventEmitter } from './handlers/messages';
-import swaggerUi from 'swagger-ui-express';
-import YAML from 'yamljs';
-import path from 'path';
+import { eventEmitter as p2pEventEmitter, router as p2pRouter } from './routers/p2p';
 
-const log = createLogger({ name: 'app.ts', level: utils.constants.LOG_LEVEL as LogLevelString });
+const log = new Logger("app.ts");
 
 const swaggerDocument = YAML.load(path.join(__dirname, './swagger.yaml'));
 

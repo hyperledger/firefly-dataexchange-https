@@ -14,16 +14,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import https from 'https';
-import * as utils from '../lib/utils';
-import { key, cert, ca } from '../lib/cert';
-import { IMessageDeliveredEvent, IMessageFailedEvent, MessageTask } from '../lib/interfaces';
-import FormData from 'form-data';
 import EventEmitter from 'events';
-import { createLogger, LogLevelString } from 'bunyan';
+import FormData from 'form-data';
+import https from 'https';
 import { v4 as uuidV4 } from 'uuid';
+import { ca, cert, key } from '../lib/cert';
+import { IMessageDeliveredEvent, IMessageFailedEvent, MessageTask } from '../lib/interfaces';
+import { Logger } from '../lib/logger';
+import * as utils from '../lib/utils';
 
-const log = createLogger({ name: 'handlers/messages.ts', level: utils.constants.LOG_LEVEL as LogLevelString });
+const log = new Logger('handlers/messages.ts')
 
 let messageQueue: MessageTask[] = [];
 let sending = false;
