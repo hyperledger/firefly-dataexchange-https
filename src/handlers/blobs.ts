@@ -26,6 +26,7 @@ import https from 'https';
 import { key, cert, ca } from '../lib/cert';
 import { createLogger, LogLevelString } from 'bunyan';
 import EventEmitter from 'events';
+import { v4 as uuidV4 } from 'uuid';
 
 const log = createLogger({ name: 'handlers/blobs.ts', level: utils.constants.LOG_LEVEL as LogLevelString });
 
@@ -97,6 +98,7 @@ export const deliverBlob = async ({ blobPath, recipient, recipientURL, requestID
       httpsAgent
     });
     eventEmitter.emit('event', {
+      id: uuidV4(),
       type: 'blob-delivered',
       path: blobPath,
       recipient,
@@ -105,6 +107,7 @@ export const deliverBlob = async ({ blobPath, recipient, recipientURL, requestID
     log.trace(`Blob delivered`);
   } catch (err) {
     eventEmitter.emit('event', {
+      id: uuidV4(),
       type: 'blob-failed',
       path: blobPath,
       recipient,

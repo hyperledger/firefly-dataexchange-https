@@ -72,7 +72,7 @@ export const start = async () => {
   messagesEventEmitter.addListener('event', event => eventsHandler.queueEvent(event));
 
   eventsHandler.eventEmitter.addListener('event', event => {
-    log.info(`Event emitted ${event.type} `)
+    log.info(`Event emitted ${event.type}/${event.id}`)
     if (delegatedWebSocket !== undefined) {
       delegatedWebSocket.send(JSON.stringify(event));
     }
@@ -86,6 +86,7 @@ export const start = async () => {
       try {
         const messageContent = JSON.parse(message.toLocaleString());
         if (messageContent.action === 'commit') {
+          log.info(`Event comitted ${event?`${event.type}/${event.id}`:`[no event in flight]`}`)
           eventsHandler.handleCommit();
         }
       } catch (err) {
