@@ -43,7 +43,7 @@ let delegatedWebSocket: WebSocket | undefined = undefined;
 export const addTLSContext = async (hostname: string) => {
   await loadCAs()
   // The most recent context wins (per the Node.js spec), so to get a reload we just add a wildcard context
-  log.info(`Adding TLS context for new peer '%s'`, hostname)
+  log.info(`Adding TLS context for new peer '${hostname}'`)
   p2pServer.addContext(hostname, genTLSContext())
 };
 setAddTLSContext(addTLSContext)
