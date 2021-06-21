@@ -72,6 +72,7 @@ export const start = async () => {
   messagesEventEmitter.addListener('event', event => eventsHandler.queueEvent(event));
 
   eventsHandler.eventEmitter.addListener('event', event => {
+    log.info(`Event emitted: ${JSON.stringify(event)}`)
     if (delegatedWebSocket !== undefined) {
       delegatedWebSocket.send(JSON.stringify(event));
     }
