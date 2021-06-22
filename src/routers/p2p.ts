@@ -30,10 +30,9 @@ router.head('/ping', (_req, res) => {
   res.sendStatus(204);
 });
 
-router.post('/messages', async (req, res, next) => {
+router.post('/messages', async (req: Request, res, next) => {
   try {
-    const r: any = req;
-    const cert = r.client.getPeerCertificate();
+    const cert = req.client.getPeerCertificate();
     const sender = utils.getPeerID(cert.issuer.O, cert.issuer.OU);
     const message = await utils.extractMessageFromMultipartForm(req);
     eventEmitter.emit('event', {
