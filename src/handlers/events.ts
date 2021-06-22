@@ -14,12 +14,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { createLogger, LogLevelString } from "bunyan";
 import EventEmitter from "events";
 import { OutboundEvent } from "../lib/interfaces";
+import { Logger } from "../lib/logger";
 import * as utils from '../lib/utils';
 
-const log = createLogger({ name: 'handlers/events.ts', level: utils.constants.LOG_LEVEL as LogLevelString });
+const log = new Logger("handlers/events.ts")
 
 let eventQueue: OutboundEvent[] = [];
 export const eventEmitter = new EventEmitter();

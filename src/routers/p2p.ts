@@ -14,12 +14,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { Router } from 'express';
+import { Router, Request } from 'express';
 import * as utils from '../lib/utils';
 import * as blobsHandler from '../handlers/blobs';
 import path from 'path';
 import { EventEmitter } from 'events';
 import { IBlobReceivedEvent, IMessageReceivedEvent } from '../lib/interfaces';
+import { v4 as uuidV4 } from 'uuid';
 
 export const router = Router();
 export const eventEmitter = new EventEmitter();
@@ -28,12 +29,13 @@ router.head('/ping', (_req, res) => {
   res.sendStatus(204);
 });
 
-router.post('/messages', async (req, res, next) => {
+router.post('/messages', async (req: Request, res, next) => {
   try {
     const cert = req.client.getPeerCertificate();
     const sender = utils.getPeerID(cert.issuer.O, cert.issuer.OU);
     const message = await utils.extractMessageFromMultipartForm(req);
     eventEmitter.emit('event', {
+      id: uuidV4(),
       type: 'message-received',
       sender,
       message
@@ -44,15 +46,16 @@ router.post('/messages', async (req, res, next) => {
   }
 });
 
-router.put('/blobs/*', async (req, res, next) => {
+router.put('/blobs/*', async (req: Request, res, next) => {
   try {
     const cert = req.client.getPeerCertificate();
-    const sender = cert.issuer.O + cert.issuer.OU;
+    const sender = utils.getPeerID(cert.issuer.O, cert.issuer.OU);
     const file = await utils.extractFileFromMultipartForm(req);
     const blobPath = path.join(utils.constants.RECEIVED_BLOBS_SUBDIRECTORY, sender, req.params[0]);
     const metadata = await blobsHandler.storeBlob(file, blobPath);
     res.sendStatus(204);
     eventEmitter.emit('event', {
+      id: uuidV4(),
       type: 'blob-received',
       sender,
       path: blobPath,
