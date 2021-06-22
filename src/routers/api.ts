@@ -14,19 +14,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { Router, Request } from 'express';
-import * as blobsHandler from '../handlers/blobs';
-import * as messagesHandler from '../handlers/messages';
-import * as utils from '../lib/utils';
-import RequestError from '../lib/request-error';
-import { config, persistConfig } from '../lib/config';
-import { IStatus } from '../lib/interfaces';
-import https from 'https';
-import { key, cert, ca, peerID } from '../lib/cert';
-import * as eventsHandler from '../handlers/events';
+import { Request, Router } from 'express';
 import { promises as fs } from 'fs';
+import https from 'https';
 import path from 'path';
 import { v4 as uuidV4 } from 'uuid';
+import * as blobsHandler from '../handlers/blobs';
+import * as eventsHandler from '../handlers/events';
+import * as messagesHandler from '../handlers/messages';
+import { ca, cert, key, peerID } from '../lib/cert';
+import { config, persistConfig } from '../lib/config';
+import { IStatus } from '../lib/interfaces';
+import RequestError from '../lib/request-error';
+import * as utils from '../lib/utils';
 
 export const router = Router();
 
