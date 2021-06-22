@@ -27,14 +27,13 @@ import * as eventsHandler from '../handlers/events';
 import { promises as fs } from 'fs';
 import path from 'path';
 import { v4 as uuidV4 } from 'uuid';
-import { URL } from 'url';
 
 export const router = Router();
 
-let addTLSContext: (hostname: string) => Promise<void>;
+let refreshCACerts: () => Promise<void>;
 
-export const setAddTLSContext = (_addTLSContext: (hostname: string) => Promise<void>) => {
-  addTLSContext = _addTLSContext;
+export const setRefreshCACerts = (fn: () => Promise<void>) => {
+  refreshCACerts = fn;
 }
 
 router.get('/id', async (_req, res, next) => {
@@ -100,8 +99,7 @@ router.put('/peers/:id', async (req, res, next) => {
       config.peers.push(peer);
     }
     await persistConfig();
-    let url = new URL(req.body.endpoint)
-    await addTLSContext(url.hostname);
+    await refreshCACerts();
     res.send({ status: 'added' });
   } catch (err) {
     next(err);

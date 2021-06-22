@@ -29,7 +29,7 @@ import { config, init as initConfig } from './lib/config';
 import { Logger } from './lib/logger';
 import RequestError, { errorHandler } from './lib/request-error';
 import * as utils from './lib/utils';
-import { router as apiRouter, setAddTLSContext } from './routers/api';
+import { router as apiRouter, setRefreshCACerts } from './routers/api';
 import { eventEmitter as p2pEventEmitter, router as p2pRouter } from './routers/p2p';
 
 const log = new Logger("app.ts");
@@ -40,13 +40,11 @@ let p2pServer : Server
 
 let delegatedWebSocket: WebSocket | undefined = undefined;
 
-export const addTLSContext = async (hostname: string) => {
+export const refreshCACerts = async () => {
   await loadCAs()
-  // The most recent context wins (per the Node.js spec), so to get a reload we just add a wildcard context
-  log.info(`Adding TLS context for new peer '${hostname}'`)
-  p2pServer.addContext(hostname, genTLSContext())
+  p2pServer.setSecureContext(genTLSContext())
 };
-setAddTLSContext(addTLSContext)
+setRefreshCACerts(refreshCACerts)
 
 export const start = async () => {
   await initConfig();
