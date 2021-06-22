@@ -17,9 +17,9 @@
 import * as utils from '../lib/utils';
 import { promises as fs } from 'fs';
 import path from 'path';
-import { createLogger, LogLevelString } from 'bunyan';
+import { Logger } from './logger';
 
-const log = createLogger({ name: 'lib/certs.ts', level: utils.constants.LOG_LEVEL as LogLevelString });
+const log = new Logger('lib/certs.ts')
 
 export let key: string;
 export let cert: string;

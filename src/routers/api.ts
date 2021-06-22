@@ -14,27 +14,26 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { Router } from 'express';
-import * as blobsHandler from '../handlers/blobs';
-import * as messagesHandler from '../handlers/messages';
-import * as utils from '../lib/utils';
-import RequestError from '../lib/request-error';
-import { config, persistConfig } from '../lib/config';
-import { IStatus } from '../lib/interfaces';
-import https from 'https';
-import { key, cert, ca, peerID } from '../lib/cert';
-import * as eventsHandler from '../handlers/events';
+import { Request, Router } from 'express';
 import { promises as fs } from 'fs';
+import https from 'https';
 import path from 'path';
 import { v4 as uuidV4 } from 'uuid';
-import { URL } from 'url';
+import * as blobsHandler from '../handlers/blobs';
+import * as eventsHandler from '../handlers/events';
+import * as messagesHandler from '../handlers/messages';
+import { ca, cert, key, peerID } from '../lib/cert';
+import { config, persistConfig } from '../lib/config';
+import { IStatus } from '../lib/interfaces';
+import RequestError from '../lib/request-error';
+import * as utils from '../lib/utils';
 
 export const router = Router();
 
-let addTLSContext: (hostname: string) => Promise<void>;
+let refreshCACerts: () => Promise<void>;
 
-export const setAddTLSContext = (_addTLSContext: (hostname: string) => Promise<void>) => {
-  addTLSContext = _addTLSContext;
+export const setRefreshCACerts = (fn: () => Promise<void>) => {
+  refreshCACerts = fn;
 }
 
 router.get('/id', async (_req, res, next) => {
@@ -100,8 +99,7 @@ router.put('/peers/:id', async (req, res, next) => {
       config.peers.push(peer);
     }
     await persistConfig();
-    let url = new URL(req.body.endpoint)
-    await addTLSContext(url.hostname);
+    await refreshCACerts();
     res.send({ status: 'added' });
   } catch (err) {
     next(err);
@@ -151,7 +149,7 @@ router.post('/messages', async (req, res, next) => {
   }
 });
 
-router.head('/blobs/*', async (req, res, next) => {
+router.head('/blobs/*', async (req: Request, res, next) => {
   try {
     const blobPath = `/${req.params[0]}`;
     if (!utils.regexp.FILE_KEY.test(blobPath) || utils.regexp.CONSECUTIVE_DOTS.test(blobPath)) {
@@ -166,7 +164,7 @@ router.head('/blobs/*', async (req, res, next) => {
   }
 });
 
-router.get('/blobs/*', async (req, res, next) => {
+router.get('/blobs/*', async (req: Request, res, next) => {
   try {
     const blobPath = `/${req.params[0]}`;
     if (!utils.regexp.FILE_KEY.test(blobPath) || utils.regexp.CONSECUTIVE_DOTS.test(blobPath)) {
@@ -183,7 +181,7 @@ router.get('/blobs/*', async (req, res, next) => {
   }
 });
 
-router.put('/blobs/*', async (req, res, next) => {
+router.put('/blobs/*', async (req: Request, res, next) => {
   try {
     const blobPath = `/${req.params[0]}`;
     if (!utils.regexp.FILE_KEY.test(blobPath) || utils.regexp.CONSECUTIVE_DOTS.test(blobPath)) {

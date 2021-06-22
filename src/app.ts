@@ -15,24 +15,24 @@
 // limitations under the License.
 
 import express from 'express';
-import https, { Server } from 'https';
 import http from 'http';
-import WebSocket from 'ws';
-import { init as initConfig, config } from './lib/config';
-import { init as initCert, genTLSContext, loadCAs } from './lib/cert';
-import { createLogger, LogLevelString } from 'bunyan';
-import * as utils from './lib/utils';
-import { router as apiRouter, setAddTLSContext } from './routers/api';
-import { router as p2pRouter, eventEmitter as p2pEventEmitter } from './routers/p2p';
-import RequestError, { errorHandler } from './lib/request-error';
-import * as eventsHandler from './handlers/events'
-import { eventEmitter as blobsEventEmitter } from './handlers/blobs';
-import { eventEmitter as messagesEventEmitter } from './handlers/messages';
-import swaggerUi from 'swagger-ui-express';
-import YAML from 'yamljs';
+import https, { Server } from 'https';
 import path from 'path';
+import swaggerUi from 'swagger-ui-express';
+import WebSocket from 'ws';
+import YAML from 'yamljs';
+import { eventEmitter as blobsEventEmitter } from './handlers/blobs';
+import * as eventsHandler from './handlers/events';
+import { eventEmitter as messagesEventEmitter } from './handlers/messages';
+import { genTLSContext, init as initCert, loadCAs } from './lib/cert';
+import { config, init as initConfig } from './lib/config';
+import { Logger } from './lib/logger';
+import RequestError, { errorHandler } from './lib/request-error';
+import * as utils from './lib/utils';
+import { router as apiRouter, setRefreshCACerts } from './routers/api';
+import { eventEmitter as p2pEventEmitter, router as p2pRouter } from './routers/p2p';
 
-const log = createLogger({ name: 'app.ts', level: utils.constants.LOG_LEVEL as LogLevelString });
+const log = new Logger("app.ts");
 
 const swaggerDocument = YAML.load(path.join(__dirname, './swagger.yaml'));
 
@@ -40,12 +40,11 @@ let p2pServer : Server
 
 let delegatedWebSocket: WebSocket | undefined = undefined;
 
-export const addTLSContext = async (hostname: string) => {
+export const refreshCACerts = async () => {
   await loadCAs()
-  // The most recent context wins (per the Node.js spec), so to get a reload we just add a wildcard context
-  p2pServer.addContext(hostname, genTLSContext())
+  p2pServer.setSecureContext(genTLSContext())
 };
-setAddTLSContext(addTLSContext)
+setRefreshCACerts(refreshCACerts)
 
 export const start = async () => {
   await initConfig();
@@ -72,6 +71,7 @@ export const start = async () => {
   messagesEventEmitter.addListener('event', event => eventsHandler.queueEvent(event));
 
   eventsHandler.eventEmitter.addListener('event', event => {
+    log.info(`Event emitted ${event.type}/${event.id}`)
     if (delegatedWebSocket !== undefined) {
       delegatedWebSocket.send(JSON.stringify(event));
     }
@@ -85,6 +85,7 @@ export const start = async () => {
       try {
         const messageContent = JSON.parse(message.toLocaleString());
         if (messageContent.action === 'commit') {
+          log.info(`Event comitted ${event?`${event.type}/${event.id}`:`[no event in flight]`}`)
           eventsHandler.handleCommit();
         }
       } catch (err) {

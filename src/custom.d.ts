@@ -16,9 +16,13 @@
 
 export {}
 
-declare global{
+declare global {
   namespace Express {
     export interface Request {
+      params: {
+        [s: string]: string,
+        0: string,
+      },
       client: {
         authorized: boolean
         getCertificate: () => {
