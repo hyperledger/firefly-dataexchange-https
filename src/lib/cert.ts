@@ -42,3 +42,13 @@ export const loadCAs = async () => {
   }
   log.debug(`Loaded ${ca.length} peer certificate(s)`);
 };
+
+export const genTLSContext = () => {
+  return {
+    key,
+    cert,
+    ca,
+    rejectUnauthorized: true,
+    requestCert: true,
+  }
+}

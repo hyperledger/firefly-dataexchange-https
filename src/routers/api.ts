@@ -22,13 +22,20 @@ import RequestError from '../lib/request-error';
 import { config, persistConfig } from '../lib/config';
 import { IStatus } from '../lib/interfaces';
 import https from 'https';
-import { key, cert, ca, loadCAs, peerID } from '../lib/cert';
+import { key, cert, ca, peerID } from '../lib/cert';
 import * as eventsHandler from '../handlers/events';
 import { promises as fs } from 'fs';
 import path from 'path';
 import { v4 as uuidV4 } from 'uuid';
+import { URL } from 'url';
 
 export const router = Router();
+
+let addTLSContext: (hostname: string) => Promise<void>;
+
+export const setAddTLSContext = (_addTLSContext: (hostname: string) => Promise<void>) => {
+  addTLSContext = _addTLSContext;
+}
 
 router.get('/id', async (_req, res, next) => {
   try {
@@ -93,7 +100,8 @@ router.put('/peers/:id', async (req, res, next) => {
       config.peers.push(peer);
     }
     await persistConfig();
-    await loadCAs();
+    let url = new URL(req.body.endpoint)
+    await addTLSContext(url.hostname);
     res.send({ status: 'added' });
   } catch (err) {
     next(err);
@@ -114,7 +122,6 @@ router.delete('/peers/:id', async (req, res, next) => {
     }
     config.peers = config.peers.filter(peer => peer.id !== req.params.id);
     await persistConfig();
-    await loadCAs();
     res.send({ status: 'removed' });
   } catch (err) {
     next(err);
@@ -144,13 +151,31 @@ router.post('/messages', async (req, res, next) => {
   }
 });
 
+router.head('/blobs/*', async (req, res, next) => {
+  try {
+    const blobPath = `/${req.params[0]}`;
+    if (!utils.regexp.FILE_KEY.test(blobPath) || utils.regexp.CONSECUTIVE_DOTS.test(blobPath)) {
+      throw new RequestError('Invalid path', 400);
+    }
+    const metadata = await blobsHandler.retreiveMetadata(blobPath);
+    res.setHeader(utils.constants.HASH_HEADER_NAME, metadata.hash);
+    res.setHeader(utils.constants.LAST_UPDATE_HEADER_NAME, metadata.lastUpdate);
+    res.status(204).send();
+  } catch (err) {
+    next(err);
+  }
+});
+
 router.get('/blobs/*', async (req, res, next) => {
   try {
     const blobPath = `/${req.params[0]}`;
     if (!utils.regexp.FILE_KEY.test(blobPath) || utils.regexp.CONSECUTIVE_DOTS.test(blobPath)) {
       throw new RequestError('Invalid path', 400);
     }
-    let blobStream = await blobsHandler.retreiveBlob(blobPath);
+    const metadata = await blobsHandler.retreiveMetadata(blobPath);
+    res.setHeader(utils.constants.HASH_HEADER_NAME, metadata.hash);
+    res.setHeader(utils.constants.LAST_UPDATE_HEADER_NAME, metadata.lastUpdate);
+    const blobStream = await blobsHandler.retreiveBlob(blobPath);
     blobStream.on('end', () => res.end());
     blobStream.pipe(res);
   } catch (err) {
@@ -165,8 +190,8 @@ router.put('/blobs/*', async (req, res, next) => {
       throw new RequestError('Invalid path', 400);
     }
     const file = await utils.extractFileFromMultipartForm(req);
-    const hash = await blobsHandler.storeBlob(file, blobPath);
-    res.send({ hash });
+    const metadata = await blobsHandler.storeBlob(file, blobPath);
+    res.send(metadata);
   } catch (err) {
     next(err);
   }
