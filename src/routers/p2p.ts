@@ -21,7 +21,6 @@ import path from 'path';
 import { EventEmitter } from 'events';
 import { IBlobReceivedEvent, IMessageReceivedEvent } from '../lib/interfaces';
 import { v4 as uuidV4 } from 'uuid';
-import '../custom'
 
 export const router = Router();
 export const eventEmitter = new EventEmitter();
