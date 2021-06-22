@@ -138,12 +138,12 @@ export const getCertData = (cert: string): ICertData => {
   const x509 = new X509();
   x509.readCertPEM(cert);
   const subject = x509.getSubjectString();
-  const o = subject.match(/O=(.+[^/])/);
+  const o = subject.match('O=([^\/.]+)');
   let certData: ICertData = {};
   if(o !== null) {
     certData.organization = o[1];
   }
-  const ou = subject.match(/OU=(.+[^/])/);
+  const ou = subject.match('OU=([^\/.]+)');
   if(ou !== null) {
     certData.organizationUnit = ou[1];
   }
