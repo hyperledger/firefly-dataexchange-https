@@ -14,7 +14,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { Router } from 'express';
+import { Router, Request } from 'express';
 import * as blobsHandler from '../handlers/blobs';
 import * as messagesHandler from '../handlers/messages';
 import * as utils from '../lib/utils';
@@ -151,10 +151,9 @@ router.post('/messages', async (req, res, next) => {
   }
 });
 
-router.head('/blobs/*', async (req, res, next) => {
+router.head('/blobs/*', async (req: Request, res, next) => {
   try {
-    const p: any = req.params
-    const blobPath = `/${p[0]}`;
+    const blobPath = `/${req.params[0]}`;
     if (!utils.regexp.FILE_KEY.test(blobPath) || utils.regexp.CONSECUTIVE_DOTS.test(blobPath)) {
       throw new RequestError('Invalid path', 400);
     }
@@ -167,10 +166,9 @@ router.head('/blobs/*', async (req, res, next) => {
   }
 });
 
-router.get('/blobs/*', async (req, res, next) => {
+router.get('/blobs/*', async (req: Request, res, next) => {
   try {
-    const p: any = req.params
-    const blobPath = `/${p[0]}`;
+    const blobPath = `/${req.params[0]}`;
     if (!utils.regexp.FILE_KEY.test(blobPath) || utils.regexp.CONSECUTIVE_DOTS.test(blobPath)) {
       throw new RequestError('Invalid path', 400);
     }
@@ -185,10 +183,9 @@ router.get('/blobs/*', async (req, res, next) => {
   }
 });
 
-router.put('/blobs/*', async (req, res, next) => {
+router.put('/blobs/*', async (req: Request, res, next) => {
   try {
-    const p: any = req.params
-    const blobPath = `/${p[0]}`;
+    const blobPath = `/${req.params[0]}`;
     if (!utils.regexp.FILE_KEY.test(blobPath) || utils.regexp.CONSECUTIVE_DOTS.test(blobPath)) {
       throw new RequestError('Invalid path', 400);
     }
