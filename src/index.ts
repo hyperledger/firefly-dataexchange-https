@@ -14,11 +14,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { start } from './app';
+import { start, stop } from './app';
 import { Logger } from './lib/logger';
 
 const log = new Logger("index.ts")
 
+process.on('SIGINT', stop);
+process.on('SIGTERM', stop);
+process.on('SIGQUIT', stop);
+
 start().catch(err => {
-  log.error(`Failed to FireFly Data Exchange ${err}`);
+  log.error(`Failed to start FireFly Data Exchange ${err}`);
 });
