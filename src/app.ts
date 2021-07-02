@@ -141,7 +141,13 @@ export const start = async () => {
   const apiServerPromise = new Promise<void>(resolve => apiServer.listen(config.api.port, config.api.hostname, () => resolve()));
   const p2pServerPromise = new Promise<void>(resolve => p2pServer.listen(config.p2p.port, config.p2p.hostname, () => resolve()));
   await Promise.all([apiServerPromise, p2pServerPromise]);
-  log.info(`Data exchange running on http://${config.api.hostname}:${config.api.port} (API) and ` +
+  log.info(`FireFly Data Exchange running on http://${config.api.hostname}:${config.api.port} (API) and ` +
     `https://${config.p2p.hostname}:${config.p2p.port} (P2P) - log level "${utils.constants.LOG_LEVEL}"`);
 
+};
+
+export const stop = async () => {
+  // add any additional logic for ensuring clients and handlers are finished with their work before shutting down
+  log.info("FireFly Data Exchange is gracefully shutting down");
+  process.exit();
 };
