@@ -16,7 +16,7 @@
 
 import express from 'express';
 import http from 'http';
-import https, { Server } from 'https';
+import https from 'https';
 import path from 'path';
 import swaggerUi from 'swagger-ui-express';
 import WebSocket from 'ws';
@@ -36,7 +36,9 @@ const log = new Logger("app.ts");
 
 const swaggerDocument = YAML.load(path.join(__dirname, './swagger.yaml'));
 
-let p2pServer : Server
+let p2pServer : https.Server
+let apiServer : http.Server
+let wss : WebSocket.Server
 
 let delegatedWebSocket: WebSocket | undefined = undefined;
 
@@ -51,12 +53,12 @@ export const start = async () => {
   await initCert();
 
   const apiApp = express();
-  const apiServer = http.createServer(apiApp);
+  apiServer = http.createServer(apiApp);
 
   const p2pApp = express();
   p2pServer = https.createServer(genTLSContext(), p2pApp);
 
-  const wss = new WebSocket.Server({
+  wss = new WebSocket.Server({
     server: apiServer, verifyClient: (info, cb) => {
       if (config.api === undefined || info.req.headers['x-api-key'] === config.apiKey) {
         cb(true);
@@ -141,7 +143,28 @@ export const start = async () => {
   const apiServerPromise = new Promise<void>(resolve => apiServer.listen(config.api.port, config.api.hostname, () => resolve()));
   const p2pServerPromise = new Promise<void>(resolve => p2pServer.listen(config.p2p.port, config.p2p.hostname, () => resolve()));
   await Promise.all([apiServerPromise, p2pServerPromise]);
-  log.info(`Data exchange running on http://${config.api.hostname}:${config.api.port} (API) and ` +
+  log.info(`FireFly Data Exchange running on http://${config.api.hostname}:${config.api.port} (API) and ` +
     `https://${config.p2p.hostname}:${config.p2p.port} (P2P) - log level "${utils.constants.LOG_LEVEL}"`);
 
+};
+
+const shutdownHandler = (resolve : (value: void | PromiseLike<void>) => void) => {
+  return (err: Error | undefined) => {
+    if (err === undefined) {
+      resolve();
+    } else {
+      log.error(`Failed to close server due to ${err}`);
+    }
+  };
+};
+
+export const stop = async () => {
+  // add any additional logic for ensuring clients and handlers are finished with their work before shutting down
+  log.info("FireFly Data Exchange is gracefully shutting down the webservers");
+  const apiServerPromise = new Promise<void>(resolve => apiServer.close( shutdownHandler(resolve)));
+  const p2pServerPromise = new Promise<void>(resolve => p2pServer.close( shutdownHandler(resolve)));
+  const wssPromise = new Promise<void>(resolve => wss.close(shutdownHandler(resolve)));
+  await Promise.all([apiServerPromise, p2pServerPromise, wssPromise]);
+  log.info("FireFly Data Exchange has stopped all webservers, exiting");
+  process.exit();
 };
