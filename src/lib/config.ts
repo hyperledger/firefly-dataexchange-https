@@ -20,6 +20,9 @@ import configSchema from '../schemas/config.json';
 import * as utils from './utils';
 import { IConfig } from './interfaces';
 import path from 'path';
+import {Logger} from "./logger";
+
+const log = new Logger('lib/config.ts')
 
 const ajv = new Ajv();
 const validateConfig = ajv.compile(configSchema);
@@ -34,13 +37,16 @@ export const init = async () => {
 
 const loadConfig = async () => {
   try {
+    log.debug(`Reading config file ${configFilePath}`);
     const data = JSON.parse(await fs.readFile(configFilePath, 'utf8'));
     try {
+      log.debug(`Reading peers file ${peersFilePath}`);
       data.peers = JSON.parse(await fs.readFile(peersFilePath, 'utf8'));
     } catch (err) {
-      // if file does not exist, just set peers to empty list
+      // if file does not exist, just set peers to either the peers from config.json (if migrating from older version) or to an empty list
+      log.debug(`Error code when reading peers file ${err.code}`);
       if (err.code === 'ENOENT') {
-        data.peers = [];
+        data.peers = data.peers || [];
       } else {
         throw err;
       }
