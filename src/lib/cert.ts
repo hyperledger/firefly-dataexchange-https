@@ -41,7 +41,7 @@ export const loadCAs = async () => {
   log.debug(`Reading peer CAs from ${peerCertsPath}`);
   const peerCerts = await fs.readdir(peerCertsPath);
   for(const peerCert of peerCerts) {
-    if (peerCert.endsWith(".pem")) {
+    if (peerCert.toLowerCase().endsWith(".pem")) {
       log.debug(`Reading peer CA ${peerCert}`);
       ca.push((await fs.readFile(path.join(peerCertsPath, peerCert))).toString());
     } else {
