@@ -23,7 +23,7 @@ import * as blobsHandler from '../handlers/blobs';
 import * as eventsHandler from '../handlers/events';
 import * as messagesHandler from '../handlers/messages';
 import { ca, cert, key, peerID } from '../lib/cert';
-import { config, persistConfig } from '../lib/config';
+import { config, persistPeers } from '../lib/config';
 import { IStatus } from '../lib/interfaces';
 import RequestError from '../lib/request-error';
 import * as utils from '../lib/utils';
@@ -98,7 +98,7 @@ router.put('/peers/:id', async (req, res, next) => {
       };
       config.peers.push(peer);
     }
-    await persistConfig();
+    await persistPeers();
     await refreshCACerts();
     res.send({ status: 'added' });
   } catch (err) {
@@ -119,7 +119,7 @@ router.delete('/peers/:id', async (req, res, next) => {
       }
     }
     config.peers = config.peers.filter(peer => peer.id !== req.params.id);
-    await persistConfig();
+    await persistPeers();
     res.send({ status: 'removed' });
   } catch (err) {
     next(err);

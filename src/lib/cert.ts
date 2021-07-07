@@ -27,7 +27,9 @@ export let ca: string[] = [];
 export let peerID: string;
 
 export const init = async () => {
+  log.debug("Reading key file");
   key = (await fs.readFile(path.join(utils.constants.DATA_DIRECTORY, utils.constants.KEY_FILE))).toString();
+  log.debug("Reading cert file");
   cert = (await fs.readFile(path.join(utils.constants.DATA_DIRECTORY, utils.constants.CERT_FILE))).toString();
   const certData = utils.getCertData(cert);
   peerID = utils.getPeerID(certData.organization, certData.organizationUnit);
@@ -36,9 +38,15 @@ export const init = async () => {
 
 export const loadCAs = async () => {
   const peerCertsPath = path.join(utils.constants.DATA_DIRECTORY, utils.constants.PEER_CERTS_SUBDIRECTORY);
+  log.debug(`Reading peer CAs from ${peerCertsPath}`);
   const peerCerts = await fs.readdir(peerCertsPath);
   for(const peerCert of peerCerts) {
-    ca.push((await fs.readFile(path.join(peerCertsPath, peerCert))).toString());
+    if (peerCert.toLowerCase().endsWith(".pem")) {
+      log.debug(`Reading peer CA ${peerCert}`);
+      ca.push((await fs.readFile(path.join(peerCertsPath, peerCert))).toString());
+    } else {
+      log.warn(`Ignoring non-PEM extension file or directory ${peerCert} when loading CAs`);
+    }
   }
   log.debug(`Loaded ${ca.length} peer certificate(s)`);
 };
