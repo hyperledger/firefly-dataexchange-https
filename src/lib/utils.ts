@@ -31,6 +31,7 @@ export const constants = {
   METADATA_SUFFIX: '.metadata.json',
   RECEIVED_BLOBS_SUBDIRECTORY: 'received',
   CONFIG_FILE_NAME: 'config.json',
+  PEERS_FILE_NAME: 'peers/data.json',
   CERT_FILE: 'cert.pem',
   KEY_FILE: 'key.pem',
   CA_FILE: 'ca.pem',

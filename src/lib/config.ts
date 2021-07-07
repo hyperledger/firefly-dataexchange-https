@@ -20,20 +20,37 @@ import configSchema from '../schemas/config.json';
 import * as utils from './utils';
 import { IConfig } from './interfaces';
 import path from 'path';
+import {Logger} from "./logger";
+
+const log = new Logger('lib/config.ts')
 
 const ajv = new Ajv();
 const validateConfig = ajv.compile(configSchema);
 const configFilePath = path.join(utils.constants.DATA_DIRECTORY, utils.constants.CONFIG_FILE_NAME);
+const peersFilePath = path.join(utils.constants.DATA_DIRECTORY, utils.constants.PEERS_FILE_NAME);
 
 export let config: IConfig;
 
 export const init = async () => {
-  await loadConfigFile();
+  await loadConfig();
 };
 
-const loadConfigFile = async () => {
+const loadConfig = async () => {
   try {
+    log.debug(`Reading config file ${configFilePath}`);
     const data = JSON.parse(await fs.readFile(configFilePath, 'utf8'));
+    try {
+      log.debug(`Reading peers file ${peersFilePath}`);
+      data.peers = JSON.parse(await fs.readFile(peersFilePath, 'utf8'));
+    } catch (err) {
+      // if file does not exist, just set peers to either the peers from config.json (if migrating from older version) or to an empty list
+      log.debug(`Error code when reading peers file ${err.code}`);
+      if (err.code === 'ENOENT') {
+        data.peers = data.peers || [];
+      } else {
+        throw err;
+      }
+    }
     if(validateConfig(data)) {
       config = data as IConfig;
       for(const peer of config.peers) {
@@ -42,13 +59,13 @@ const loadConfigFile = async () => {
         }
       }
     } else {
-      throw new Error('Invalid configuration file');
+      throw new Error('Invalid configuration files');
     }
   } catch(err) {
-    throw new Error(`Failed to read configuration file. ${err}`);
+    throw new Error(`Failed to read configuration files. ${err}`);
   }
 };
 
-export const persistConfig = async () => {
-  await fs.writeFile(configFilePath, JSON.stringify(config, null, 2));
+export const persistPeers = async () => {
+  await fs.writeFile(peersFilePath, JSON.stringify(config.peers, null, 2));
 };
