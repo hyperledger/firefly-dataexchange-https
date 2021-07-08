@@ -67,5 +67,27 @@ const loadConfig = async () => {
 };
 
 export const persistPeers = async () => {
+  await ensurePeersDirectoryExists();
   await fs.writeFile(peersFilePath, JSON.stringify(config.peers, null, 2));
+};
+
+const ensurePeersDirectoryExists = async () => {
+  try {
+    await fs.access(peersFilePath);
+  } catch(err) {
+    if(err.code === 'ENOENT') {
+      await createPeersDirectory();
+    } else {
+      log.warn(`Could not check for existence of peers subdirectory ${err.code}`);
+    }
+  }
+};
+
+const createPeersDirectory = async () => {
+  try {
+    await fs.mkdir(path.parse(peersFilePath).dir, { recursive: true });
+    log.info('Peers subdirectory created');
+  } catch(err) {
+    log.error(`Failed to create peers subdirectory ${err.code}`);
+  }
 };
