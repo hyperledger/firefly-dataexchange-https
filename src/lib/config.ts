@@ -88,6 +88,6 @@ const createPeersDirectory = async () => {
     await fs.mkdir(path.parse(peersFilePath).dir, { recursive: true });
     log.info('Peers subdirectory created');
   } catch(err) {
-    log.info(`Failed to create peers subdirectory ${err.code}`);
+    log.error(`Failed to create peers subdirectory ${err.code}`);
   }
 };
