@@ -23,20 +23,38 @@ const log = new Logger('lib/certs.ts')
 
 export let key: string;
 export let cert: string;
+export let certBundle: string;
 export let ca: string[] = [];
 export let peerID: string;
 
 export const init = async () => {
   log.debug("Reading key file");
   key = (await fs.readFile(path.join(utils.constants.DATA_DIRECTORY, utils.constants.KEY_FILE))).toString();
+  log.debug("Loaded key");
   log.debug("Reading cert file");
   cert = (await fs.readFile(path.join(utils.constants.DATA_DIRECTORY, utils.constants.CERT_FILE))).toString();
+
+  log.debug("Loaded cert");
+  log.debug(cert);
+
+  log.debug("Deriving peer ID from cert");
   const certData = utils.getCertData(cert);
   peerID = utils.getPeerID(certData.organization, certData.organizationUnit);
-  await loadCAs();
+
+  let caCertPath = path.join(utils.constants.DATA_DIRECTORY, utils.constants.CA_FILE);
+  if (await utils.fileExists(caCertPath)) {
+    log.debug("Reading CA file");
+    certBundle = (await fs.readFile(caCertPath)).toString() + cert;
+    log.debug("Loaded CA + cert");
+    log.debug(certBundle);
+  } else {
+    certBundle = cert;
+  }
+
+  await loadPeerCAs();
 };
 
-export const loadCAs = async () => {
+export const loadPeerCAs = async () => {
   const peerCertsPath = path.join(utils.constants.DATA_DIRECTORY, utils.constants.PEER_CERTS_SUBDIRECTORY);
   log.debug(`Reading peer CAs from ${peerCertsPath}`);
   const peerCerts = await fs.readdir(peerCertsPath);
@@ -49,6 +67,10 @@ export const loadCAs = async () => {
     }
   }
   log.debug(`Loaded ${ca.length} peer certificate(s)`);
+  for (const caCert of ca) {
+    log.debug("Outputting CA cert");
+    log.debug(caCert);
+  }
 };
 
 export const genTLSContext = () => {
