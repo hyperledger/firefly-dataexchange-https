@@ -23,15 +23,9 @@ declare global {
         [s: string]: string,
         0: string,
       },
-      client: {
-        authorized: boolean
-        getCertificate: () => {
-          issuer: {
-            O: string
-          }
-        },
+      socket: {
         getPeerCertificate: () => {
-          issuer: {
+          subject: {
             O: string
             OU: string
           }
