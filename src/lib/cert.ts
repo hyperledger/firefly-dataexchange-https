@@ -34,22 +34,20 @@ export const init = async () => {
   log.debug("Reading cert file");
   cert = (await fs.readFile(path.join(utils.constants.DATA_DIRECTORY, utils.constants.CERT_FILE))).toString();
 
-  log.debug("Loaded cert");
-  log.debug(cert);
-
-  log.debug("Deriving peer ID from cert");
-  const certData = utils.getCertData(cert);
-  peerID = utils.getPeerID(certData.organization, certData.organizationUnit);
-
   let caCertPath = path.join(utils.constants.DATA_DIRECTORY, utils.constants.CA_FILE);
   if (await utils.fileExists(caCertPath)) {
     log.debug("Reading CA file");
     certBundle = (await fs.readFile(caCertPath)).toString() + cert;
     log.debug("Loaded CA + cert");
-    log.debug(certBundle);
   } else {
     certBundle = cert;
+    log.debug("Loaded cert");
   }
+  log.debug("\n" + certBundle);
+
+  log.debug("Deriving peer ID from cert");
+  const certData = utils.getCertData(cert);
+  peerID = utils.getPeerID(certData.organization, certData.organizationUnit);
 
   await loadPeerCAs();
 };

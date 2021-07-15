@@ -31,8 +31,7 @@ router.head('/ping', (_req, res) => {
 
 router.post('/messages', async (req: Request, res, next) => {
   try {
-    const cert = req.client.getPeerCertificate();
-    const sender = utils.getPeerID(cert.issuer.O, cert.issuer.OU);
+    const sender = utils.extractPeerSenderFromRequest(req);
     const message = await utils.extractMessageFromMultipartForm(req);
     eventEmitter.emit('event', {
       id: uuidV4(),
@@ -48,8 +47,7 @@ router.post('/messages', async (req: Request, res, next) => {
 
 router.put('/blobs/*', async (req: Request, res, next) => {
   try {
-    const cert = req.client.getPeerCertificate();
-    const sender = utils.getPeerID(cert.issuer.O, cert.issuer.OU);
+    const sender = utils.extractPeerSenderFromRequest(req);
     const file = await utils.extractFileFromMultipartForm(req);
     const blobPath = path.join(utils.constants.RECEIVED_BLOBS_SUBDIRECTORY, sender, req.params[0]);
     const metadata = await blobsHandler.storeBlob(file, blobPath);
