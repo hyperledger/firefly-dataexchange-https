@@ -46,7 +46,7 @@ export const constants = {
 const log = new Logger('utils.ts')
 
 export const regexp = {
-  FILE_KEY: /^(\/[a-z0-9\+\-\_\.]+)+$/,
+  FILE_KEY: /^(\/[a-z0-9\+\-\_\.]+)+$/i,
   CONSECUTIVE_DOTS: /\.\./
 };
 
