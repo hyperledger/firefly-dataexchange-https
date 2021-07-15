@@ -24,7 +24,7 @@ import YAML from 'yamljs';
 import { eventEmitter as blobsEventEmitter } from './handlers/blobs';
 import * as eventsHandler from './handlers/events';
 import { eventEmitter as messagesEventEmitter } from './handlers/messages';
-import { genTLSContext, init as initCert, loadCAs } from './lib/cert';
+import { genTLSContext, init as initCert, loadPeerCAs } from './lib/cert';
 import { config, init as initConfig } from './lib/config';
 import { Logger } from './lib/logger';
 import RequestError, { errorHandler } from './lib/request-error';
@@ -43,7 +43,7 @@ let wss : WebSocket.Server
 let delegatedWebSocket: WebSocket | undefined = undefined;
 
 export const refreshCACerts = async () => {
-  await loadCAs()
+  await loadPeerCAs()
   p2pServer.setSecureContext(genTLSContext())
 };
 setRefreshCACerts(refreshCACerts)
