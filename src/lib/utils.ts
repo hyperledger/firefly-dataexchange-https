@@ -22,6 +22,7 @@ import { X509 } from 'jsrsasign';
 import { ICertData, IFile } from './interfaces';
 import { Logger } from './logger';
 import RequestError from './request-error';
+import { TLSSocket } from "tls";
 
 export const constants = {
   LOG_LEVEL: process.env.LOG_LEVEL || 'info',
@@ -45,7 +46,7 @@ export const constants = {
 const log = new Logger('utils.ts')
 
 export const regexp = {
-  FILE_KEY: /^(\/[a-z0-9\+\-\_\.]+)+$/,
+  FILE_KEY: /^(\/[a-z0-9\+\-\_\.]+)+$/i,
   CONSECUTIVE_DOTS: /\.\./
 };
 
@@ -149,4 +150,9 @@ export const getCertData = (cert: string): ICertData => {
     certData.organizationUnit = ou[1];
   }
   return certData;
+};
+
+export const extractPeerSenderFromRequest = (req: Request): string => {
+  const cert = ((req.socket) as TLSSocket).getPeerCertificate();
+  return getPeerID(cert.subject.O, cert.subject.OU);
 };
