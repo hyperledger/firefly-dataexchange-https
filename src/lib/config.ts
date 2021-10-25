@@ -42,7 +42,7 @@ const loadConfig = async () => {
     try {
       log.debug(`Reading peers file ${peersFilePath}`);
       data.peers = JSON.parse(await fs.readFile(peersFilePath, 'utf8'));
-    } catch (err) {
+    } catch (err: any) {
       // if file does not exist, just set peers to either the peers from config.json (if migrating from older version) or to an empty list
       log.debug(`Error code when reading peers file ${err.code}`);
       if (err.code === 'ENOENT') {
@@ -59,6 +59,7 @@ const loadConfig = async () => {
         }
       }
     } else {
+      log.error("Config file parsing failed", validateConfig.errors)
       throw new Error('Invalid configuration files');
     }
   } catch(err) {
@@ -75,7 +76,7 @@ export const persistPeers = async () => {
 const ensurePeersDirectoryExists = async () => {
   try {
     await fs.access(peersFilePath);
-  } catch(err) {
+  } catch(err: any) {
     if(err.code === 'ENOENT') {
       await createPeersDirectory();
     } else {
@@ -88,7 +89,7 @@ const createPeersDirectory = async () => {
   try {
     await fs.mkdir(path.parse(peersFilePath).dir, { recursive: true });
     log.info('Peers subdirectory created');
-  } catch(err) {
+  } catch(err: any) {
     log.error(`Failed to create peers subdirectory ${err.code}`);
   }
 };

@@ -15,7 +15,7 @@
 // limitations under the License.
 
 import axios, { AxiosRequestConfig } from 'axios';
-import Busboy from 'busboy';
+import Busboy, { BusboyHeaders } from 'busboy';
 import { Request } from 'express';
 import { promises as fs } from 'fs';
 import { X509 } from 'jsrsasign';
@@ -54,7 +54,7 @@ export const fileExists = async (filePath: string): Promise<boolean> => {
   try {
     const stats = await fs.stat(filePath);
     return !stats.isDirectory();
-  } catch (err) {
+  } catch (err: any) {
     if (err.errno === -2) {
       return false;
     } else {
@@ -67,7 +67,7 @@ export const fileExists = async (filePath: string): Promise<boolean> => {
 export const extractFileFromMultipartForm = (req: Request): Promise<IFile> => {
   return new Promise(async (resolve, reject) => {
     let fileFound = false;
-    req.pipe(new Busboy({ headers: req.headers })
+    req.pipe(new Busboy({ headers: req.headers as BusboyHeaders })
       .on('file', (fieldname, readableStream, fileName) => {
         fileFound = true;
         resolve({
@@ -86,7 +86,7 @@ export const extractFileFromMultipartForm = (req: Request): Promise<IFile> => {
 export const extractMessageFromMultipartForm = (req: Request): Promise<string> => {
   return new Promise(async (resolve, reject) => {
     let fieldFound = false;
-    req.pipe(new Busboy({ headers: req.headers })
+    req.pipe(new Busboy({ headers: req.headers as BusboyHeaders })
       .on('field', (fieldname, value) => {
         if(fieldname === 'message') {
           fieldFound = true;
@@ -107,7 +107,7 @@ export const axiosWithRetry = async (config: AxiosRequestConfig) => {
     try {
       log.debug(`${config.method} ${config.url}`);
       return await axios(config);
-    } catch (err) {
+    } catch (err: any) {
       const data = err.response?.data;
       log.error(`${config.method} ${config.url} attempt ${attempts} [${err.response?.status}]`, (data && !data.on) ? data : err.stack);
       if (err.response?.status === 404) {

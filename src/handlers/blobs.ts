@@ -105,7 +105,7 @@ export const deliverBlob = async ({ blobPath, recipient, recipientURL, requestID
       requestID
     } as IBlobDeliveredEvent);
     log.trace(`Blob delivered`);
-  } catch (err) {
+  } catch (err: any) {
     eventEmitter.emit('event', {
       id: uuidV4(),
       type: 'blob-failed',
