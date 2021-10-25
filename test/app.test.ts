@@ -17,9 +17,11 @@ import * as app from '../src/app';
 describe('app', () => {
 
   beforeEach(async () => {
-    if ((await fs.stat(sandboxDir)).isDirectory()) {
-      await fs.rm(sandboxDir, { recursive: true, force: true})
-    }
+    try {
+      if ((await fs.stat(sandboxDir)).isDirectory()) {
+        await fs.rm(sandboxDir, { recursive: true, force: true})
+      }
+    } catch(err: any) {}
     await fs.mkdir(sandboxDir)
     await fs.mkdir(join(sandboxDir, 'peer-certs'))
 
