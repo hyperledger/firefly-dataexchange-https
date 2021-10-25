@@ -1,0 +1,23 @@
+name: Typescript
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: tsc
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v1
+    - name: install node v16
+      uses: actions/setup-node@v1
+      with:
+        node-version: 16
+    - name: npm install
+      run: npm install
+    - name: tsc
+      run: npm t

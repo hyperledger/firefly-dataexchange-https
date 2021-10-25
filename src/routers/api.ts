@@ -113,7 +113,7 @@ router.delete('/peers/:id', async (req, res, next) => {
     }
     try {
       await fs.rm(path.join(utils.constants.DATA_DIRECTORY, utils.constants.PEER_CERTS_SUBDIRECTORY, `${req.params.id}.pem`));
-    } catch (err) {
+    } catch (err: any) {
       if (err.errno !== -2) {
         throw new RequestError(`Failed to remove peer certificate`);
       }

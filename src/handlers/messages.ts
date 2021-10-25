@@ -63,7 +63,7 @@ export const deliverMessage = async ({ message, recipient, recipientURL, request
       requestID
     } as IMessageDeliveredEvent);
     log.trace(`Message delivered`);
-  } catch(err) {
+  } catch(err: any) {
     eventEmitter.emit('event', {
       id: uuidV4(),
       type: 'message-failed',
