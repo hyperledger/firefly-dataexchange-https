@@ -39,11 +39,13 @@ export const constants = {
   TRANSFER_HASH_ALGORITHM: 'sha256',
   REST_API_CALL_MAX_ATTEMPTS: 5,
   REST_API_CALL_RETRY_DELAY_MS: 500,
+  REST_API_CALL_REQUEST_TIMEOUT: 1000,
   MAX_EVENT_QUEUE_SIZE: 1000,
   HASH_HEADER_NAME: 'dx-hash',
   LAST_UPDATE_HEADER_NAME: 'dx-last-update'
 };
-const log = new Logger('utils.ts')
+const log = new Logger('utils.ts');
+axios.defaults.timeout = constants.REST_API_CALL_REQUEST_TIMEOUT;
 
 export const regexp = {
   FILE_KEY: /^(\/[a-z0-9\+\-\_\.]+)+$/i,
