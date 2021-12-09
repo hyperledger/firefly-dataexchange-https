@@ -95,6 +95,7 @@ export const deliverBlob = async ({ blobPath, recipient, recipientURL, requestID
       url: `${recipientURL}/api/v1/blobs${blobPath}`,
       data: formData,
       headers: formData.getHeaders(),
+      timeout: utils.constants.REST_API_CALL_BLOB_REQUEST_TIMEOUT,
       httpsAgent
     });
     eventEmitter.emit('event', {
