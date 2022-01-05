@@ -43,6 +43,7 @@ export const constants = {
   REST_API_CALL_BLOB_REQUEST_TIMEOUT: 60000,
   MAX_EVENT_QUEUE_SIZE: 1000,
   HASH_HEADER_NAME: 'dx-hash',
+  SIZE_HEADER_NAME: 'dx-size',
   LAST_UPDATE_HEADER_NAME: 'dx-last-update'
 };
 const log = new Logger('utils.ts');

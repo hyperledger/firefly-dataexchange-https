@@ -73,6 +73,7 @@ export interface IBlobReceivedEvent {
   sender: string
   path: string
   hash: string
+  size: number
 }
 
 export interface IBlobDeliveredEvent {
@@ -133,5 +134,6 @@ export interface ICertData {
 
 export interface IMetadata {
   hash: string
+  size: number
   lastUpdate: number
 }

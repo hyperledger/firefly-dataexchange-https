@@ -58,6 +58,7 @@ router.put('/blobs/*', async (req: Request, res, next) => {
       sender,
       path: blobPath,
       hash: metadata.hash,
+      size: metadata.size,
       lastUpdate: metadata.lastUpdate
     } as IBlobReceivedEvent);
   } catch (err) {
