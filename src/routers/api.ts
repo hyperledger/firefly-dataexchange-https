@@ -157,6 +157,7 @@ router.head('/blobs/*', async (req: Request, res, next) => {
     }
     const metadata = await blobsHandler.retreiveMetadata(blobPath);
     res.setHeader(utils.constants.HASH_HEADER_NAME, metadata.hash);
+    res.setHeader(utils.constants.SIZE_HEADER_NAME, metadata.size);
     res.setHeader(utils.constants.LAST_UPDATE_HEADER_NAME, metadata.lastUpdate);
     res.status(204).send();
   } catch (err) {
@@ -172,6 +173,7 @@ router.get('/blobs/*', async (req: Request, res, next) => {
     }
     const metadata = await blobsHandler.retreiveMetadata(blobPath);
     res.setHeader(utils.constants.HASH_HEADER_NAME, metadata.hash);
+    res.setHeader(utils.constants.SIZE_HEADER_NAME, metadata.size);
     res.setHeader(utils.constants.LAST_UPDATE_HEADER_NAME, metadata.lastUpdate);
     const blobStream = await blobsHandler.retreiveBlob(blobPath);
     blobStream.on('end', () => res.end());

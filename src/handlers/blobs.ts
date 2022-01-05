@@ -46,11 +46,13 @@ export const storeBlob = async (file: IFile, filePath: string) => {
   const resolvedFilePath = path.join(utils.constants.DATA_DIRECTORY, utils.constants.BLOBS_SUBDIRECTORY, filePath);
   await fs.mkdir(path.parse(resolvedFilePath).dir, { recursive: true });
   let hash = crypto.createHash(utils.constants.TRANSFER_HASH_ALGORITHM);
+  let blobSize = 0;
   const writeStream = createWriteStream(resolvedFilePath);
   const blobHash = await new Promise<string>((resolve, reject) => {
     let hashCalculator = new stream.Transform({
       transform(chunk, _enc, cb) {
         hash.update(chunk);
+        blobSize += chunk.length
         cb(undefined, chunk);
       },
       flush(cb) {
@@ -63,7 +65,7 @@ export const storeBlob = async (file: IFile, filePath: string) => {
     });
     file.readableStream.pipe(hashCalculator).pipe(writeStream);
   });
-  return await upsertMetadata(filePath, blobHash);
+  return await upsertMetadata(filePath, blobHash, blobSize);
 };
 
 export const sendBlob = async (blobPath: string, recipient: string, recipientURL: string, requestID: string | undefined) => {
@@ -132,11 +134,12 @@ export const retreiveMetadata = async (filePath: string) => {
   }
 };
 
-export const upsertMetadata = async (filePath: string, hash: string) => {
+export const upsertMetadata = async (filePath: string, hash: string, size: number) => {
   const resolvedFilePath = path.join(utils.constants.DATA_DIRECTORY, utils.constants.BLOBS_SUBDIRECTORY, filePath + utils.constants.METADATA_SUFFIX);
   await fs.mkdir(path.parse(resolvedFilePath).dir, { recursive: true });
   let metadata: IMetadata = {
     hash,
+    size,
     lastUpdate: new Date().getTime()
   };
   await fs.writeFile(resolvedFilePath, JSON.stringify(metadata));
