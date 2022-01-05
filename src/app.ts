@@ -133,7 +133,7 @@ export const start = async () => {
   });
 
   apiApp.use(express.urlencoded({ extended: true }));
-  apiApp.use(express.json());
+  apiApp.use(express.json({limit: utils.constants.JSON_PARSER_LIMIT}));
   apiApp.use('/api/v1', apiRouter);
   apiApp.use(errorHandler);
 
