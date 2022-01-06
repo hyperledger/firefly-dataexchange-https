@@ -29,6 +29,7 @@ export interface IConfig {
     id: string
     endpoint: string
   }[]
+  jsonParserLimit?: string
 }
 
 export interface IFile {

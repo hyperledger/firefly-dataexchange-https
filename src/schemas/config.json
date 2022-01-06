@@ -60,6 +60,10 @@
           }
         }
       }
+    },
+    "jsonParserLimit": {
+      "type": "string",
+      "pattern": "^\\d+(k|K|m|M|g|G|t|T|p|P)?(b|B)$"
     }
   }
 }

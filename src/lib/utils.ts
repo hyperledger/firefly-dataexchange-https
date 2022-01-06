@@ -44,7 +44,8 @@ export const constants = {
   MAX_EVENT_QUEUE_SIZE: 1000,
   HASH_HEADER_NAME: 'dx-hash',
   SIZE_HEADER_NAME: 'dx-size',
-  LAST_UPDATE_HEADER_NAME: 'dx-last-update'
+  LAST_UPDATE_HEADER_NAME: 'dx-last-update',
+  DEFAULT_JSON_PARSER_LIMIT: '1mb'
 };
 const log = new Logger('utils.ts');
 axios.defaults.timeout = constants.REST_API_CALL_REQUEST_TIMEOUT;
