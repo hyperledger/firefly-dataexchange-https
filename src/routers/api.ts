@@ -176,7 +176,6 @@ router.get('/blobs/*', async (req: Request, res, next) => {
     res.setHeader(utils.constants.SIZE_HEADER_NAME, metadata.size);
     res.setHeader(utils.constants.LAST_UPDATE_HEADER_NAME, metadata.lastUpdate);
     const blobStream = await blobsHandler.retreiveBlob(blobPath);
-    blobStream.on('end', () => res.end());
     blobStream.pipe(res);
   } catch (err) {
     next(err);
