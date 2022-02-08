@@ -68,12 +68,12 @@ export const storeBlob = async (file: IFile, filePath: string) => {
   return await upsertMetadata(filePath, blobHash, blobSize);
 };
 
-export const sendBlob = async (blobPath: string, recipient: string, recipientURL: string, requestID: string | undefined) => {
+export const sendBlob = async (blobPath: string, recipient: string, recipientURL: string, requestId: string | undefined) => {
   if (sending) {
-    blobQueue.push({ blobPath, recipient, recipientURL, requestID });
+    blobQueue.push({ blobPath, recipient, recipientURL, requestId });
   } else {
     sending = true;
-    blobQueue.push({ blobPath, recipient, recipientURL, requestID });
+    blobQueue.push({ blobPath, recipient, recipientURL, requestId });
     while (blobQueue.length > 0) {
       await deliverBlob(blobQueue.shift()!);
     }
@@ -81,7 +81,7 @@ export const sendBlob = async (blobPath: string, recipient: string, recipientURL
   }
 };
 
-export const deliverBlob = async ({ blobPath, recipient, recipientURL, requestID }: BlobTask) => {
+export const deliverBlob = async ({ blobPath, recipient, recipientURL, requestId }: BlobTask) => {
   const resolvedFilePath = path.join(utils.constants.DATA_DIRECTORY, utils.constants.BLOBS_SUBDIRECTORY, blobPath);
   if (!(await utils.fileExists(resolvedFilePath))) {
     throw new RequestError('Blob not found', 404);
@@ -105,7 +105,7 @@ export const deliverBlob = async ({ blobPath, recipient, recipientURL, requestID
       type: 'blob-delivered',
       path: blobPath,
       recipient,
-      requestID
+      requestId
     } as IBlobDeliveredEvent);
     log.trace(`Blob delivered`);
   } catch (err: any) {
@@ -114,7 +114,7 @@ export const deliverBlob = async ({ blobPath, recipient, recipientURL, requestID
       type: 'blob-failed',
       path: blobPath,
       recipient,
-      requestID,
+      requestId,
       error: err.message,
     } as IBlobFailedEvent);
     log.error(`Failed to deliver blob ${err}`);
