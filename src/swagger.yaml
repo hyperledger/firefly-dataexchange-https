@@ -356,7 +356,7 @@
             type: string
           recipient:
             type: string
-          requestID:
+          requestId:
             type: string
       BlobHash:
         type: object
@@ -375,14 +375,14 @@
             type: string
           recipient:
             type: string
-          requestID:
+          requestId:
             type: string
       Submitted:
         type: object
         required:
-          - requestID
+          - requestId
         properties:
-          requestID:
+          requestId:
             type: string
       Error:
         type: object

@@ -65,7 +65,7 @@ export interface IMessageFailedEvent {
   type: 'message-failed'
   recipient: string
   message: string
-  requestID?: string
+  requestId?: string
 }
 
 export interface IBlobReceivedEvent {
@@ -106,14 +106,14 @@ export interface ICommitEvent {
 }
 
 export type MessageTask = {
-  requestID?: string
+  requestId?: string
   message: string
   recipient: string
   recipientURL: string
 }
 
 export type BlobTask = {
-  requestID?: string
+  requestId?: string
   blobPath: string
   recipient: string
   recipientURL: string

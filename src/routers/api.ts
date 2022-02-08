@@ -138,12 +138,12 @@ router.post('/messages', async (req, res, next) => {
     if (recipientURL === undefined) {
       throw new RequestError(`Unknown recipient`, 400);
     }
-    let requestID = uuidV4();
-    if(typeof req.body.requestID === 'string') {
-      requestID = req.body.requestID;
+    let requestId = uuidV4();
+    if(typeof req.body.requestId === 'string') {
+      requestId = req.body.requestId;
     }
-    messagesHandler.sendMessage(req.body.message, req.body.recipient, recipientURL, requestID);
-    res.send({ requestID });
+    messagesHandler.sendMessage(req.body.message, req.body.recipient, recipientURL, requestId);
+    res.send({ requestId });
   } catch (err) {
     next(err);
   }
@@ -211,12 +211,12 @@ router.post('/transfers', async (req, res, next) => {
     if (recipientURL === undefined) {
       throw new RequestError(`Unknown recipient`, 400);
     }
-    let requestID = uuidV4();
-    if(typeof req.body.requestID === 'string') {
-      requestID = req.body.requestID;
+    let requestId = uuidV4();
+    if(typeof req.body.requestId === 'string') {
+      requestId = req.body.requestId;
     }
-    blobsHandler.sendBlob(req.body.path, req.body.recipient, recipientURL, requestID);
-    res.send({ requestID });
+    blobsHandler.sendBlob(req.body.path, req.body.recipient, recipientURL, requestId);
+    res.send({ requestId });
   } catch (err) {
     next(err);
   }

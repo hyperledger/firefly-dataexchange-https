@@ -29,12 +29,12 @@ let messageQueue: MessageTask[] = [];
 let sending = false;
 export const eventEmitter = new EventEmitter();
 
-export const sendMessage = async (message: string, recipient: string, recipientURL: string, requestID: string | undefined) => {
+export const sendMessage = async (message: string, recipient: string, recipientURL: string, requestId: string | undefined) => {
   if (sending) {
-    messageQueue.push({ message, recipient, recipientURL, requestID });
+    messageQueue.push({ message, recipient, recipientURL, requestId });
   } else {
     sending = true;
-    messageQueue.push({ message, recipient, recipientURL, requestID });
+    messageQueue.push({ message, recipient, recipientURL, requestId });
     while (messageQueue.length > 0) {
       await deliverMessage(messageQueue.shift()!);
     }
@@ -42,7 +42,7 @@ export const sendMessage = async (message: string, recipient: string, recipientU
   }
 };
 
-export const deliverMessage = async ({ message, recipient, recipientURL, requestID }: MessageTask) => {
+export const deliverMessage = async ({ message, recipient, recipientURL, requestId }: MessageTask) => {
   const httpsAgent = new https.Agent({ cert, key, ca });
   const formData = new FormData();
   formData.append('message', message);
@@ -60,7 +60,7 @@ export const deliverMessage = async ({ message, recipient, recipientURL, request
       type: 'message-delivered',
       message,
       recipient,
-      requestID
+      requestId
     } as IMessageDeliveredEvent);
     log.trace(`Message delivered`);
   } catch(err: any) {
@@ -69,7 +69,7 @@ export const deliverMessage = async ({ message, recipient, recipientURL, request
       type: 'message-failed',
       message,
       recipient,
-      requestID,
+      requestId,
       error: err.message,
     } as IMessageFailedEvent);
     log.error(`Failed to deliver message ${err}`);
