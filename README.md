@@ -137,9 +137,9 @@ This will make it possible for the organizations to establish MTLS communication
 |message-delivered| Emitted to the sender when a message has been delivered    | recipient, message, requestId (optional)
 |message-failed   | Emitted to the sender when a message could not be delivered| recipient, message, requestId (optional)
 
-- After receiving a websocket message, a commit must be sent in order to receive the next one:
+- After receiving a websocket message, an ack must be sent ("commit" is a synonym for "ack"):
   ```
-  { "action": "commit" }
+  { "action": "ack", "id": "<ID_FROM_EVENT>" }
   ```
 - Messages arrive in the same order they were sent
 - Up to 1,000 messages will be queued

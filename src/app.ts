@@ -26,11 +26,13 @@ import * as eventsHandler from './handlers/events';
 import { eventEmitter as messagesEventEmitter } from './handlers/messages';
 import { genTLSContext, init as initCert, loadPeerCAs } from './lib/cert';
 import { config, init as initConfig } from './lib/config';
+import { IAckEvent } from './lib/interfaces';
 import { Logger } from './lib/logger';
 import RequestError, { errorHandler } from './lib/request-error';
 import * as utils from './lib/utils';
 import { router as apiRouter, setRefreshCACerts } from './routers/api';
 import { eventEmitter as p2pEventEmitter, router as p2pRouter } from './routers/p2p';
+import { init as initEvents } from './handlers/events';
 
 const log = new Logger("app.ts");
 
@@ -51,6 +53,7 @@ setRefreshCACerts(refreshCACerts)
 export const start = async () => {
   await initConfig();
   await initCert();
+  await initEvents(config);
 
   const apiApp = express();
   apiServer = http.createServer(apiApp);
@@ -72,7 +75,7 @@ export const start = async () => {
   blobsEventEmitter.addListener('event', event => eventsHandler.queueEvent(event));
   messagesEventEmitter.addListener('event', event => eventsHandler.queueEvent(event));
 
-  eventsHandler.eventEmitter.addListener('event', event => {
+  eventsHandler.getEmitter().addListener('event', event => {
     log.info(`Event emitted ${event.type}/${event.id}`)
     if (delegatedWebSocket !== undefined) {
       delegatedWebSocket.send(JSON.stringify(event));
@@ -82,21 +85,16 @@ export const start = async () => {
   const assignWebSocketDelegate = (webSocket: WebSocket) => {
     log.info('New WebSocket delegate assigned');
     delegatedWebSocket = webSocket;
-    const event = eventsHandler.getCurrentEvent();
     webSocket.on('message', async message => {
       try {
         const messageContent = JSON.parse(message.toLocaleString());
-        if (messageContent.action === 'commit') {
-          log.info(`Event comitted ${event?`${event.type}/${event.id}`:`[no event in flight]`}`)
-          eventsHandler.handleCommit();
+        if (messageContent.action === 'ack' || messageContent.action == 'commit') {
+          eventsHandler.handleAck(messageContent as IAckEvent);
         }
       } catch (err) {
         log.error(`Failed to process websocket message ${err}`);
       }
     });
-    if (event !== undefined) {
-      webSocket.send(JSON.stringify(event));
-    }
     webSocket.on('close', () => {
       log.info('WebSocket delegate disconnected');
       const nextDelegatedWebSocket = wss.clients.values().next().value;
@@ -106,6 +104,8 @@ export const start = async () => {
         delegatedWebSocket = undefined;
       }
     });
+    // Anything that's in-flight needs to be sent again
+    eventsHandler.reDispatchInFlight();
   };
 
   wss.on('connection', (webSocket: WebSocket) => {

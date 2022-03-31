@@ -15,7 +15,7 @@
 // limitations under the License.
 
 import axios, { AxiosRequestConfig } from 'axios';
-import Busboy, { BusboyHeaders } from 'busboy';
+import newBusboy from 'busboy';
 import { Request } from 'express';
 import { promises as fs } from 'fs';
 import { X509 } from 'jsrsasign';
@@ -45,7 +45,8 @@ export const constants = {
   HASH_HEADER_NAME: 'dx-hash',
   SIZE_HEADER_NAME: 'dx-size',
   LAST_UPDATE_HEADER_NAME: 'dx-last-update',
-  DEFAULT_JSON_PARSER_LIMIT: '1mb'
+  DEFAULT_JSON_PARSER_LIMIT: '1mb',
+  DEFAULT_MAX_INFLIGHT: 100
 };
 const log = new Logger('utils.ts');
 axios.defaults.timeout = constants.REST_API_CALL_REQUEST_TIMEOUT;
@@ -72,12 +73,12 @@ export const fileExists = async (filePath: string): Promise<boolean> => {
 export const extractFileFromMultipartForm = (req: Request): Promise<IFile> => {
   return new Promise(async (resolve, reject) => {
     let fileFound = false;
-    req.pipe(new Busboy({ headers: req.headers as BusboyHeaders })
-      .on('file', (fieldname, readableStream, fileName) => {
+    req.pipe(newBusboy({ headers: req.headers })
+      .on('file', (fieldname, readableStream, file) => {
         fileFound = true;
         resolve({
           key: fieldname,
-          name: fileName,
+          name: file.filename,
           readableStream
         });
       })).on('finish', () => {
@@ -91,7 +92,7 @@ export const extractFileFromMultipartForm = (req: Request): Promise<IFile> => {
 export const extractMessageFromMultipartForm = (req: Request): Promise<string> => {
   return new Promise(async (resolve, reject) => {
     let fieldFound = false;
-    req.pipe(new Busboy({ headers: req.headers as BusboyHeaders })
+    req.pipe(newBusboy({ headers: req.headers })
       .on('field', (fieldname, value) => {
         if(fieldname === 'message') {
           fieldFound = true;
