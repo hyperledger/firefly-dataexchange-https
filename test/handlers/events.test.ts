@@ -174,19 +174,31 @@ describe('events', () => {
 
   it('re-dispatches in-flight when requested', async () => {
 
-    await events.init({} as IConfig)
+    await events.init({
+      events: {
+        maxInflight: 2,
+        queueSize: 2,
+      }
+    } as IConfig)
 
+    const received: string[] = [];
     const doubleDispatch = new Promise<void>(resolve => {
-      let dispatchCount = 0;
-      events.getEmitter().addListener('event', () => {
-        if (++dispatchCount === 2) {
+      events.getEmitter().addListener('event', (event: OutboundEvent) => {
+        received.push(event.id)
+        if (received.length === 4) {
           resolve();
         }
       })
     });
 
     await events.queueEvent({
-      id: `right`,
+      id: `1`,
+      type: 'message-received',
+      message: `message`,
+      sender: 'peer1'
+    });
+    await events.queueEvent({
+      id: `2`,
       type: 'message-received',
       message: `message`,
       sender: 'peer1'
@@ -195,6 +207,13 @@ describe('events', () => {
     events.reDispatchInFlight();
     
     await doubleDispatch;
+
+    expect(received).to.deep.equal([
+      '1',
+      '2',
+      '1',
+      '2',
+    ])
 
   })
 
