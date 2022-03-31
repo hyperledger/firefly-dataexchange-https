@@ -21,9 +21,7 @@ import path from 'path';
 import swaggerUi from 'swagger-ui-express';
 import WebSocket from 'ws';
 import YAML from 'yamljs';
-import { eventEmitter as blobsEventEmitter } from './handlers/blobs';
 import * as eventsHandler from './handlers/events';
-import { eventEmitter as messagesEventEmitter } from './handlers/messages';
 import { genTLSContext, init as initCert, loadPeerCAs } from './lib/cert';
 import { config, init as initConfig } from './lib/config';
 import { IAckEvent } from './lib/interfaces';
@@ -31,7 +29,7 @@ import { Logger } from './lib/logger';
 import RequestError, { errorHandler } from './lib/request-error';
 import * as utils from './lib/utils';
 import { router as apiRouter, setRefreshCACerts } from './routers/api';
-import { eventEmitter as p2pEventEmitter, router as p2pRouter } from './routers/p2p';
+import { router as p2pRouter } from './routers/p2p';
 import { init as initEvents } from './handlers/events';
 
 const log = new Logger("app.ts");
@@ -70,10 +68,6 @@ export const start = async () => {
       }
     }
   });
-
-  p2pEventEmitter.addListener('event', event => eventsHandler.queueEvent(event));
-  blobsEventEmitter.addListener('event', event => eventsHandler.queueEvent(event));
-  messagesEventEmitter.addListener('event', event => eventsHandler.queueEvent(event));
 
   eventsHandler.getEmitter().addListener('event', event => {
     log.info(`Event emitted ${event.type}/${event.id}`)
