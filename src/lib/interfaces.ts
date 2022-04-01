@@ -19,6 +19,10 @@ export interface IConfig {
     hostname: string
     port: number
   }
+  events?: {
+    maxInflight?: number
+    queueSize?: number;
+  }
   p2p: {
     hostname: string
     port: number
@@ -93,7 +97,7 @@ export interface IBlobFailedEvent {
 
 export type InboundEvent =
   IMessageEvent |
-  ICommitEvent
+  IAckEvent
 
 export interface IMessageEvent {
   type: 'message'
@@ -101,8 +105,9 @@ export interface IMessageEvent {
   message: string
 }
 
-export interface ICommitEvent {
-  type: 'commit'
+export interface IAckEvent {
+  type: 'commit' | 'ack'
+  id?: string
 }
 
 export type MessageTask = {
@@ -121,6 +126,7 @@ export type BlobTask = {
 
 export interface IStatus {
   messageQueueSize: number
+  inFlightCount: number
   peers: {
     id: string
     endpoint: string

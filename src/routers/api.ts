@@ -51,7 +51,7 @@ router.get('/id', async (_req, res, next) => {
 router.get('/status', async (_req, res, next) => {
   try {
     let status: IStatus = {
-      messageQueueSize: eventsHandler.getQueueSize(),
+      ...eventsHandler.getStats(),
       peers: []
     };
     let promises = [];

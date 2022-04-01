@@ -51,8 +51,8 @@ const loadConfig = async () => {
         throw err;
       }
     }
+    config = data as IConfig;
     if(validateConfig(data)) {
-      config = data as IConfig;
       for(const peer of config.peers) {
         if(peer.endpoint.endsWith('/')) {
           peer.endpoint = peer.endpoint.slice(-0, -1);

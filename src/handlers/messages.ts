@@ -14,7 +14,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import EventEmitter from 'events';
 import FormData from 'form-data';
 import https from 'https';
 import { v4 as uuidV4 } from 'uuid';
@@ -22,12 +21,12 @@ import { ca, cert, key } from '../lib/cert';
 import { IMessageDeliveredEvent, IMessageFailedEvent, MessageTask } from '../lib/interfaces';
 import { Logger } from '../lib/logger';
 import * as utils from '../lib/utils';
+import { queueEvent } from './events';
 
 const log = new Logger('handlers/messages.ts')
 
 let messageQueue: MessageTask[] = [];
 let sending = false;
-export const eventEmitter = new EventEmitter();
 
 export const sendMessage = async (message: string, recipient: string, recipientURL: string, requestId: string | undefined) => {
   if (sending) {
@@ -55,7 +54,7 @@ export const deliverMessage = async ({ message, recipient, recipientURL, request
       headers: formData.getHeaders(),
       httpsAgent
     });
-    eventEmitter.emit('event', {
+    await queueEvent({
       id: uuidV4(),
       type: 'message-delivered',
       message,
@@ -64,7 +63,7 @@ export const deliverMessage = async ({ message, recipient, recipientURL, request
     } as IMessageDeliveredEvent);
     log.trace(`Message delivered`);
   } catch(err: any) {
-    eventEmitter.emit('event', {
+    await queueEvent({
       id: uuidV4(),
       type: 'message-failed',
       message,

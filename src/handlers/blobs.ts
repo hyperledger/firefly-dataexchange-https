@@ -15,7 +15,6 @@
 // limitations under the License.
 
 import crypto from 'crypto';
-import EventEmitter from 'events';
 import FormData from 'form-data';
 import { createReadStream, createWriteStream, promises as fs } from 'fs';
 import https from 'https';
@@ -27,12 +26,12 @@ import { BlobTask, IBlobDeliveredEvent, IBlobFailedEvent, IFile, IMetadata } fro
 import { Logger } from '../lib/logger';
 import RequestError from '../lib/request-error';
 import * as utils from '../lib/utils';
+import { queueEvent } from './events';
 
 const log = new Logger("handlers/blobs.ts")
 
 let blobQueue: BlobTask[] = [];
 let sending = false;
-export const eventEmitter = new EventEmitter();
 
 export const retreiveBlob = async (filePath: string) => {
   const resolvedFilePath = path.join(utils.constants.DATA_DIRECTORY, utils.constants.BLOBS_SUBDIRECTORY, filePath);
@@ -100,7 +99,7 @@ export const deliverBlob = async ({ blobPath, recipient, recipientURL, requestId
       timeout: utils.constants.REST_API_CALL_BLOB_REQUEST_TIMEOUT,
       httpsAgent
     });
-    eventEmitter.emit('event', {
+    await queueEvent({
       id: uuidV4(),
       type: 'blob-delivered',
       path: blobPath,
@@ -109,7 +108,7 @@ export const deliverBlob = async ({ blobPath, recipient, recipientURL, requestId
     } as IBlobDeliveredEvent);
     log.trace(`Blob delivered`);
   } catch (err: any) {
-    eventEmitter.emit('event', {
+    await queueEvent({
       id: uuidV4(),
       type: 'blob-failed',
       path: blobPath,
