@@ -139,10 +139,11 @@ router.post('/messages', async (req, res, next) => {
       throw new RequestError(`Unknown recipient`, 400);
     }
     let requestId = uuidV4();
-    if(typeof req.body.requestId === 'string') {
+    if (typeof req.body.requestId === 'string') {
       requestId = req.body.requestId;
     }
-    messagesHandler.sendMessage(req.body.message, req.body.recipient, recipientURL, requestId);
+    const headers = getHeaders(req.body.headers);
+    messagesHandler.sendMessage(req.body.message, req.body.recipient, recipientURL, requestId, headers);
     res.send({ requestId });
   } catch (err) {
     next(err);
@@ -188,7 +189,7 @@ router.put('/blobs/*', async (req: Request, res, next) => {
     if (!utils.regexp.FILE_KEY.test(blobPath) || utils.regexp.CONSECUTIVE_DOTS.test(blobPath)) {
       throw new RequestError('Invalid path', 400);
     }
-    const file = await utils.extractFileFromMultipartForm(req);
+    const { file } = await utils.extractFileFromMultipartForm(req);
     const metadata = await blobsHandler.storeBlob(file, blobPath);
     res.send(metadata);
   } catch (err) {
@@ -212,12 +213,25 @@ router.post('/transfers', async (req, res, next) => {
       throw new RequestError(`Unknown recipient`, 400);
     }
     let requestId = uuidV4();
-    if(typeof req.body.requestId === 'string') {
+    if (typeof req.body.requestId === 'string') {
       requestId = req.body.requestId;
     }
-    blobsHandler.sendBlob(req.body.path, req.body.recipient, recipientURL, requestId);
+    const headers = getHeaders(req.body.headers);
+    blobsHandler.sendBlob(req.body.path, req.body.recipient, recipientURL, requestId, headers);
     res.send({ requestId });
   } catch (err) {
     next(err);
   }
 });
+
+const getHeaders = (headers: any) => {
+  if (headers === undefined) {
+    return {} as { [key: string]: string };;
+  }
+  for (const [key, value] of Object.entries(headers)) {
+    if (typeof key !== 'string' || typeof value !== 'string') {
+      throw new RequestError('Invalid headers', 400);
+    }
+  }
+  return headers as { [key: string]: string };
+};

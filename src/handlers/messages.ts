@@ -28,12 +28,12 @@ const log = new Logger('handlers/messages.ts')
 let messageQueue: MessageTask[] = [];
 let sending = false;
 
-export const sendMessage = async (message: string, recipient: string, recipientURL: string, requestId: string | undefined) => {
+export const sendMessage = async (message: string, recipient: string, recipientURL: string, requestId: string | undefined, headers: {[key: string]: string}) => {
   if (sending) {
-    messageQueue.push({ message, recipient, recipientURL, requestId });
+    messageQueue.push({ message, recipient, recipientURL, requestId, headers });
   } else {
     sending = true;
-    messageQueue.push({ message, recipient, recipientURL, requestId });
+    messageQueue.push({ message, recipient, recipientURL, requestId, headers });
     while (messageQueue.length > 0) {
       await deliverMessage(messageQueue.shift()!);
     }
@@ -41,9 +41,10 @@ export const sendMessage = async (message: string, recipient: string, recipientU
   }
 };
 
-export const deliverMessage = async ({ message, recipient, recipientURL, requestId }: MessageTask) => {
+export const deliverMessage = async ({ message, recipient, recipientURL, requestId, headers }: MessageTask) => {
   const httpsAgent = new https.Agent({ cert, key, ca });
   const formData = new FormData();
+  formData.append('headers', JSON.stringify(headers));
   formData.append('message', message);
   log.trace(`Delivering message to ${recipient} at ${recipientURL}`);
   try {
@@ -59,7 +60,8 @@ export const deliverMessage = async ({ message, recipient, recipientURL, request
       type: 'message-delivered',
       message,
       recipient,
-      requestId
+      requestId,
+      headers
     } as IMessageDeliveredEvent);
     log.trace(`Message delivered`);
   } catch(err: any) {
@@ -69,6 +71,7 @@ export const deliverMessage = async ({ message, recipient, recipientURL, request
       message,
       recipient,
       requestId,
+      headers,
       error: err.message,
     } as IMessageFailedEvent);
     log.error(`Failed to deliver message ${err}`);

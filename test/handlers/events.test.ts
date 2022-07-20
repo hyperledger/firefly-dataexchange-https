@@ -59,7 +59,10 @@ describe('events', () => {
         id: `${i}`,
         type: 'message-received',
         message: `message_${i}`,
-        sender: 'peer1'
+        sender: 'peer1',
+        headers: {
+          sample: 'abc'
+        }
       }); 
     }
     await firstTenDispatched;
@@ -111,7 +114,10 @@ describe('events', () => {
           id: `${i}`,
           type: 'message-received',
           message: `message_${i}`,
-          sender: 'peer1'
+          sender: 'peer1',
+          headers: {
+            sample: 'abc'
+          }
         });
         queued++;
       }
@@ -148,7 +154,10 @@ describe('events', () => {
       id: `right`,
       type: 'message-received',
       message: `message`,
-      sender: 'peer1'
+      sender: 'peer1',
+      headers: {
+        sample: 'abc'
+      }
     });
 
     events.handleAck({ id: `wrong`, type: 'ack' });
@@ -164,7 +173,10 @@ describe('events', () => {
       id: `right`,
       type: 'message-received',
       message: `message`,
-      sender: 'peer1'
+      sender: 'peer1',
+      headers: {
+        sample: 'abc'
+      }
     });
 
     events.handleAck({ type: 'ack' });
@@ -195,13 +207,19 @@ describe('events', () => {
       id: `1`,
       type: 'message-received',
       message: `message`,
-      sender: 'peer1'
+      sender: 'peer1',
+      headers: {
+        sample: 'abc'
+      }
     });
     await events.queueEvent({
       id: `2`,
       type: 'message-received',
       message: `message`,
-      sender: 'peer1'
+      sender: 'peer1',
+      headers: {
+        sample: 'abc'
+      }
     });
 
     events.reDispatchInFlight();

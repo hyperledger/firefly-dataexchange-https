@@ -67,12 +67,12 @@ export const storeBlob = async (file: IFile, filePath: string) => {
   return await upsertMetadata(filePath, blobHash, blobSize);
 };
 
-export const sendBlob = async (blobPath: string, recipient: string, recipientURL: string, requestId: string | undefined) => {
+export const sendBlob = async (blobPath: string, recipient: string, recipientURL: string, requestId: string | undefined, headers: {[key: string]: string}) => {
   if (sending) {
-    blobQueue.push({ blobPath, recipient, recipientURL, requestId });
+    blobQueue.push({ blobPath, recipient, recipientURL, requestId, headers });
   } else {
     sending = true;
-    blobQueue.push({ blobPath, recipient, recipientURL, requestId });
+    blobQueue.push({ blobPath, recipient, recipientURL, requestId, headers });
     while (blobQueue.length > 0) {
       await deliverBlob(blobQueue.shift()!);
     }
@@ -80,13 +80,14 @@ export const sendBlob = async (blobPath: string, recipient: string, recipientURL
   }
 };
 
-export const deliverBlob = async ({ blobPath, recipient, recipientURL, requestId }: BlobTask) => {
+export const deliverBlob = async ({ blobPath, recipient, recipientURL, requestId, headers }: BlobTask) => {
   const resolvedFilePath = path.join(utils.constants.DATA_DIRECTORY, utils.constants.BLOBS_SUBDIRECTORY, blobPath);
   if (!(await utils.fileExists(resolvedFilePath))) {
     throw new RequestError('Blob not found', 404);
   }
   const stream = createReadStream(resolvedFilePath);
   const formData = new FormData();
+  formData.append('headers', JSON.stringify(headers));
   formData.append('blob', stream);
   const httpsAgent = new https.Agent({ cert, key, ca });
   log.trace(`Delivering blob ${blobPath} to ${recipient} at ${recipientURL}`);
@@ -104,7 +105,8 @@ export const deliverBlob = async ({ blobPath, recipient, recipientURL, requestId
       type: 'blob-delivered',
       path: blobPath,
       recipient,
-      requestId
+      requestId,
+      headers
     } as IBlobDeliveredEvent);
     log.trace(`Blob delivered`);
   } catch (err: any) {
@@ -114,6 +116,7 @@ export const deliverBlob = async ({ blobPath, recipient, recipientURL, requestId
       path: blobPath,
       recipient,
       requestId,
+      headers,
       error: err.message,
     } as IBlobFailedEvent);
     log.error(`Failed to deliver blob ${err}`);

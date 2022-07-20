@@ -76,7 +76,7 @@ export const genTLSContext = () => {
     key,
     cert,
     ca,
-    rejectUnauthorized: true,
+    rejectUnauthorized: Boolean(process.env.NODE_TLS_REJECT_UNAUTHORIZED === '0'? false: true),
     requestCert: true,
   }
 }
