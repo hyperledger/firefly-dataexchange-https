@@ -31,12 +31,13 @@ router.head('/ping', (_req, res) => {
 router.post('/messages', async (req: Request, res, next) => {
   try {
     const sender = utils.extractPeerSenderFromRequest(req);
-    const message = await utils.extractMessageFromMultipartForm(req);
+    const { headers, message } = await utils.extractMessageFromMultipartForm(req);
     await queueEvent({
       id: uuidV4(),
       type: 'message-received',
       sender,
-      message
+      message,
+      headers
     } as IMessageReceivedEvent);
     res.sendStatus(204);
   } catch (err) {
@@ -47,7 +48,7 @@ router.post('/messages', async (req: Request, res, next) => {
 router.put('/blobs/*', async (req: Request, res, next) => {
   try {
     const sender = utils.extractPeerSenderFromRequest(req);
-    const file = await utils.extractFileFromMultipartForm(req);
+    const { headers, file } = await utils.extractFileFromMultipartForm(req);
     const blobPath = path.join(utils.constants.RECEIVED_BLOBS_SUBDIRECTORY, sender, req.params[0]);
     const metadata = await blobsHandler.storeBlob(file, blobPath);
     res.sendStatus(204);
@@ -55,6 +56,7 @@ router.put('/blobs/*', async (req: Request, res, next) => {
       id: uuidV4(),
       type: 'blob-received',
       sender,
+      headers,
       path: blobPath,
       hash: metadata.hash,
       size: metadata.size,

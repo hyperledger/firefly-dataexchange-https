@@ -12,7 +12,7 @@
   "peers": [
     {
       "id": "org-a",
-      "endpoint": "https://localhost:3001"
+      "endpoint": "https://0.0.0.0:3001"
     }
   ]
 }

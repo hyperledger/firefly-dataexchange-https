@@ -67,19 +67,26 @@ export const fileExists = async (filePath: string): Promise<boolean> => {
       throw err;
     }
   }
-  return true;
 }
 
-export const extractFileFromMultipartForm = (req: Request): Promise<IFile> => {
+export const extractFileFromMultipartForm = (req: Request): Promise<{ headers: { [key: string]: string }, file: IFile }> => {
   return new Promise(async (resolve, reject) => {
     let fileFound = false;
+    let headers: { [key: string]: string } = {};
     req.pipe(newBusboy({ headers: req.headers })
+      .on('field', (fieldname, value) => {
+        if (fieldname === 'headers') {
+          headers = JSON.parse(value);
+        }
+      })
       .on('file', (fieldname, readableStream, file) => {
         fileFound = true;
         resolve({
-          key: fieldname,
-          name: file.filename,
-          readableStream
+          headers, file: {
+            key: fieldname,
+            name: file.filename,
+            readableStream
+          }
         });
       })).on('finish', () => {
         if (!fileFound) {
@@ -89,19 +96,24 @@ export const extractFileFromMultipartForm = (req: Request): Promise<IFile> => {
   });
 };
 
-export const extractMessageFromMultipartForm = (req: Request): Promise<string> => {
+export const extractMessageFromMultipartForm = (req: Request): Promise<{ headers: { [key: string]: string }, message: string }> => {
   return new Promise(async (resolve, reject) => {
-    let fieldFound = false;
+    let headers: { [key: string]: string } | undefined;
+    let message: string | undefined = undefined;
     req.pipe(newBusboy({ headers: req.headers })
       .on('field', (fieldname, value) => {
-        if(fieldname === 'message') {
-          fieldFound = true;
-          resolve(value);
+        switch (fieldname) {
+          case 'headers': headers = JSON.parse(value); break;
+          case 'message': message = value; break;
         }
       })).on('finish', () => {
-        if (!fieldFound) {
+        if (headers === undefined) {
+          reject(new RequestError('Missing headers', 400));
+        }
+        if (headers === undefined) {
           reject(new RequestError('Missing message', 400));
         }
+        resolve({ headers: headers!, message: message! });
       });
   });
 };
@@ -129,13 +141,13 @@ export const axiosWithRetry = async (config: AxiosRequestConfig) => {
 };
 
 export const getPeerID = (organization: string | undefined, organizationUnit: string | undefined) => {
-  if(organization !== undefined) {
-    if(organizationUnit !== undefined) {
+  if (organization !== undefined) {
+    if (organizationUnit !== undefined) {
       return `${organization}-${organizationUnit}`;
     } else {
       return organization;
     }
-  } else if(organizationUnit !== undefined) {
+  } else if (organizationUnit !== undefined) {
     return organizationUnit;
   } else {
     throw new Error('Invalid peer');
@@ -148,11 +160,11 @@ export const getCertData = (cert: string): ICertData => {
   const subject = x509.getSubjectString();
   const o = subject.match('O=([^\/.]+)');
   let certData: ICertData = {};
-  if(o !== null) {
+  if (o !== null) {
     certData.organization = o[1];
   }
   const ou = subject.match('OU=([^\/.]+)');
-  if(ou !== null) {
+  if (ou !== null) {
     certData.organizationUnit = ou[1];
   }
   return certData;

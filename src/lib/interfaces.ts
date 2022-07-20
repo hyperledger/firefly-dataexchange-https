@@ -55,6 +55,7 @@ export interface IMessageReceivedEvent {
   type: 'message-received'
   sender: string
   message: string
+  headers: {[key: string]: string}
 }
 
 export interface IMessageDeliveredEvent {
@@ -62,6 +63,7 @@ export interface IMessageDeliveredEvent {
   type: 'message-delivered'
   recipient: string
   message: string
+  headers: {[key: string]: string}
 }
 
 export interface IMessageFailedEvent {
@@ -70,6 +72,7 @@ export interface IMessageFailedEvent {
   recipient: string
   message: string
   requestId?: string
+  headers: {[key: string]: string}
 }
 
 export interface IBlobReceivedEvent {
@@ -79,6 +82,7 @@ export interface IBlobReceivedEvent {
   path: string
   hash: string
   size: number
+  headers: {[key: string]: string}
 }
 
 export interface IBlobDeliveredEvent {
@@ -86,6 +90,7 @@ export interface IBlobDeliveredEvent {
   type: 'blob-delivered'
   recipient: string
   path: string
+  headers: {[key: string]: string}
 }
 
 export interface IBlobFailedEvent {
@@ -93,6 +98,7 @@ export interface IBlobFailedEvent {
   type: 'blob-failed'
   recipient: string
   path: string
+  headers: {[key: string]: string}
 }
 
 export type InboundEvent =
@@ -115,6 +121,7 @@ export type MessageTask = {
   message: string
   recipient: string
   recipientURL: string
+  headers: {[key: string]: string}
 }
 
 export type BlobTask = {
@@ -122,6 +129,7 @@ export type BlobTask = {
   blobPath: string
   recipient: string
   recipientURL: string
+  headers: {[key: string]: string}
 }
 
 export interface IStatus {
