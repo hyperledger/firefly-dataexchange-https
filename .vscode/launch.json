@@ -14,7 +14,9 @@
       ],
       "env": {
         "DATA_DIRECTORY": "${workspaceFolder}/data/member-a",
-        "LOG_LEVEL": "info"
+        "LOG_LEVEL": "info",
+        "REJECT_UNAUTHORIZED": "false",
+        "NODE_TLS_REJECT_UNAUTHORIZED": "0"
       },
       "args": [
         "|",
@@ -35,6 +37,8 @@
       "env": {
         "DATA_DIRECTORY": "${workspaceFolder}/data/member-b",
         "LOG_LEVEL": "info",
+        "REJECT_UNAUTHORIZED": "false",
+        "NODE_TLS_REJECT_UNAUTHORIZED": "0"
       },
       "args": [
         "|",
