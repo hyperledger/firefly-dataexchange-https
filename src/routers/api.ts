@@ -222,6 +222,7 @@ router.post('/transfers', async (req, res, next) => {
     if (!utils.regexp.FILE_KEY.test(req.body.path) || utils.regexp.CONSECUTIVE_DOTS.test(req.body.path)) {
       throw new RequestError('Invalid path', 400);
     }
+    await blobsHandler.retreiveMetadata(path.join(utils.constants.DATA_DIRECTORY, utils.constants.BLOBS_SUBDIRECTORY, req.body.path));
     let senderDestination: string | undefined = undefined;
     if (typeof req.body.sender === 'string') {
       if (!req.body.sender.startsWith(peerID)) {
