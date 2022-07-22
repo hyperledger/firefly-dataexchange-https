@@ -21,7 +21,7 @@ import https from 'https';
 import path from 'path';
 import stream from 'stream';
 import { v4 as uuidV4 } from 'uuid';
-import { ca, cert, key } from '../lib/cert';
+import { ca, cert, key, peerID } from '../lib/cert';
 import { BlobTask, IBlobDeliveredEvent, IBlobFailedEvent, IFile, IMetadata } from "../lib/interfaces";
 import { Logger } from '../lib/logger';
 import RequestError from '../lib/request-error';
@@ -67,12 +67,13 @@ export const storeBlob = async (file: IFile, filePath: string) => {
   return await upsertMetadata(filePath, blobHash, blobSize);
 };
 
-export const sendBlob = async (blobPath: string, recipient: string, recipientURL: string, requestId: string | undefined) => {
+export const sendBlob = async (blobPath: string, recipientID: string, recipientURL: string, requestId: string | undefined,
+  senderDestination: string | undefined, recipientDestination: string | undefined) => {
   if (sending) {
-    blobQueue.push({ blobPath, recipient, recipientURL, requestId });
+    blobQueue.push({ blobPath, recipientID, recipientURL, requestId, senderDestination, recipientDestination });
   } else {
     sending = true;
-    blobQueue.push({ blobPath, recipient, recipientURL, requestId });
+    blobQueue.push({ blobPath, recipientID, recipientURL, requestId, senderDestination, recipientDestination });
     while (blobQueue.length > 0) {
       await deliverBlob(blobQueue.shift()!);
     }
@@ -80,13 +81,23 @@ export const sendBlob = async (blobPath: string, recipient: string, recipientURL
   }
 };
 
-export const deliverBlob = async ({ blobPath, recipient, recipientURL, requestId }: BlobTask) => {
+export const deliverBlob = async ({ blobPath, recipientID, recipientURL, requestId, senderDestination, recipientDestination }: BlobTask) => {
   const resolvedFilePath = path.join(utils.constants.DATA_DIRECTORY, utils.constants.BLOBS_SUBDIRECTORY, blobPath);
   if (!(await utils.fileExists(resolvedFilePath))) {
     throw new RequestError('Blob not found', 404);
   }
   const stream = createReadStream(resolvedFilePath);
   const formData = new FormData();
+  let sender = peerID;
+  if(senderDestination !== undefined) {
+    formData.append('senderDestination', senderDestination);
+    sender += utils.constants.ID_SEGMENT_SEPARATOR + senderDestination
+  }
+  let recipient = recipientID;
+  if(recipientDestination !== undefined) {
+    formData.append('recipientDestination', recipientDestination);
+    recipient += utils.constants.ID_SEGMENT_SEPARATOR + recipientDestination;
+  }
   formData.append('blob', stream);
   const httpsAgent = new https.Agent({ cert, key, ca });
   log.trace(`Delivering blob ${blobPath} to ${recipient} at ${recipientURL}`);
@@ -103,6 +114,7 @@ export const deliverBlob = async ({ blobPath, recipient, recipientURL, requestId
       id: uuidV4(),
       type: 'blob-delivered',
       path: blobPath,
+      sender,
       recipient,
       requestId
     } as IBlobDeliveredEvent);
@@ -112,6 +124,7 @@ export const deliverBlob = async ({ blobPath, recipient, recipientURL, requestId
       id: uuidV4(),
       type: 'blob-failed',
       path: blobPath,
+      sender,
       recipient,
       requestId,
       error: err.message,

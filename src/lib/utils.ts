@@ -46,7 +46,8 @@ export const constants = {
   SIZE_HEADER_NAME: 'dx-size',
   LAST_UPDATE_HEADER_NAME: 'dx-last-update',
   DEFAULT_JSON_PARSER_LIMIT: '1mb',
-  DEFAULT_MAX_INFLIGHT: 100
+  DEFAULT_MAX_INFLIGHT: 100,
+  ID_SEGMENT_SEPARATOR: '/'
 };
 const log = new Logger('utils.ts');
 axios.defaults.timeout = constants.REST_API_CALL_REQUEST_TIMEOUT;
@@ -67,19 +68,33 @@ export const fileExists = async (filePath: string): Promise<boolean> => {
       throw err;
     }
   }
-  return true;
 }
 
-export const extractFileFromMultipartForm = (req: Request): Promise<IFile> => {
+export const extractFileFromMultipartForm = (req: Request): Promise<{
+  file: IFile, senderDestination: string | undefined,
+  recipientDestination: string | undefined
+}> => {
   return new Promise(async (resolve, reject) => {
     let fileFound = false;
+    let senderDestination: string | undefined = undefined;
+    let recipientDestination: string | undefined = undefined;
     req.pipe(newBusboy({ headers: req.headers })
+      .on('field', (fieldname, value) => {
+        switch (fieldname) {
+          case 'senderDestination': senderDestination = value; break;
+          case 'recipientDestination': recipientDestination = value; break;
+        }
+      })
       .on('file', (fieldname, readableStream, file) => {
         fileFound = true;
         resolve({
-          key: fieldname,
-          name: file.filename,
-          readableStream
+          senderDestination,
+          recipientDestination,
+          file: {
+            key: fieldname,
+            name: file.filename,
+            readableStream
+          }
         });
       })).on('finish', () => {
         if (!fileFound) {
@@ -89,18 +104,26 @@ export const extractFileFromMultipartForm = (req: Request): Promise<IFile> => {
   });
 };
 
-export const extractMessageFromMultipartForm = (req: Request): Promise<string> => {
+export const extractMessageFromMultipartForm = (req: Request): Promise<{
+  senderDestination: string | undefined,
+  recipientDestination: string | undefined, message: string
+}> => {
   return new Promise(async (resolve, reject) => {
-    let fieldFound = false;
+    let message: string | undefined = undefined;
+    let senderDestination: string | undefined = undefined;
+    let recipientDestination: string | undefined = undefined;
     req.pipe(newBusboy({ headers: req.headers })
       .on('field', (fieldname, value) => {
-        if(fieldname === 'message') {
-          fieldFound = true;
-          resolve(value);
+        switch (fieldname) {
+          case 'senderDestination': senderDestination = value; break;
+          case 'recipientDestination': recipientDestination = value; break;
+          case 'message': message = value; break;
         }
       })).on('finish', () => {
-        if (!fieldFound) {
+        if (message === undefined) {
           reject(new RequestError('Missing message', 400));
+        } else {
+          resolve({ message, senderDestination, recipientDestination });
         }
       });
   });
@@ -129,13 +152,13 @@ export const axiosWithRetry = async (config: AxiosRequestConfig) => {
 };
 
 export const getPeerID = (organization: string | undefined, organizationUnit: string | undefined) => {
-  if(organization !== undefined) {
-    if(organizationUnit !== undefined) {
+  if (organization !== undefined) {
+    if (organizationUnit !== undefined) {
       return `${organization}-${organizationUnit}`;
     } else {
       return organization;
     }
-  } else if(organizationUnit !== undefined) {
+  } else if (organizationUnit !== undefined) {
     return organizationUnit;
   } else {
     throw new Error('Invalid peer');
@@ -148,11 +171,11 @@ export const getCertData = (cert: string): ICertData => {
   const subject = x509.getSubjectString();
   const o = subject.match('O=([^\/.]+)');
   let certData: ICertData = {};
-  if(o !== null) {
+  if (o !== null) {
     certData.organization = o[1];
   }
   const ou = subject.match('OU=([^\/.]+)');
-  if(ou !== null) {
+  if (ou !== null) {
     certData.organizationUnit = ou[1];
   }
   return certData;

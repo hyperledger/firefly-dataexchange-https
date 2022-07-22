@@ -131,18 +131,42 @@ router.post('/messages', async (req, res, next) => {
     if (req.body.message === undefined) {
       throw new RequestError('Missing message', 400);
     }
-    if (req.body.recipient === undefined) {
+    let senderDestination: string | undefined = undefined;
+    if (typeof req.body.sender === 'string') {
+      if (!req.body.sender.startsWith(peerID)) {
+        throw new RequestError('Invalid sender');
+      } else {
+        const destination = req.body.sender.substring(peerID.length + 1);
+        if(destination.length > 0) {
+          senderDestination = destination;
+        }
+      }
+    }
+    let recipientID: string;
+    let recipientDestination: string | undefined = undefined;
+    if (typeof req.body.recipient === 'string') {
+      const index = req.body.recipient.indexOf(utils.constants.ID_SEGMENT_SEPARATOR);
+      if (index !== -1) {
+        recipientID = req.body.recipient.substring(0, index);
+        const destination = req.body.recipient.substring(index + 1);
+        if(destination.length > 0) {
+          recipientDestination = destination;
+        }
+      } else {
+        recipientID = req.body.recipient;
+      }
+    } else {
       throw new RequestError('Missing recipient', 400);
     }
-    let recipientURL = config.peers.find(peer => peer.id === req.body.recipient)?.endpoint;
+    let recipientURL = config.peers.find(peer => peer.id === recipientID)?.endpoint;
     if (recipientURL === undefined) {
       throw new RequestError(`Unknown recipient`, 400);
     }
     let requestId = uuidV4();
-    if(typeof req.body.requestId === 'string') {
+    if (typeof req.body.requestId === 'string') {
       requestId = req.body.requestId;
     }
-    messagesHandler.sendMessage(req.body.message, req.body.recipient, recipientURL, requestId);
+    messagesHandler.sendMessage(req.body.message, recipientID, recipientURL, requestId, senderDestination, recipientDestination);
     res.send({ requestId });
   } catch (err) {
     next(err);
@@ -188,7 +212,7 @@ router.put('/blobs/*', async (req: Request, res, next) => {
     if (!utils.regexp.FILE_KEY.test(blobPath) || utils.regexp.CONSECUTIVE_DOTS.test(blobPath)) {
       throw new RequestError('Invalid path', 400);
     }
-    const file = await utils.extractFileFromMultipartForm(req);
+    const { file } = await utils.extractFileFromMultipartForm(req);
     const metadata = await blobsHandler.storeBlob(file, blobPath);
     res.send(metadata);
   } catch (err) {
@@ -204,18 +228,43 @@ router.post('/transfers', async (req, res, next) => {
     if (!utils.regexp.FILE_KEY.test(req.body.path) || utils.regexp.CONSECUTIVE_DOTS.test(req.body.path)) {
       throw new RequestError('Invalid path', 400);
     }
-    if (req.body.recipient === undefined) {
+    await blobsHandler.retreiveMetadata(path.join(utils.constants.DATA_DIRECTORY, utils.constants.BLOBS_SUBDIRECTORY, req.body.path));
+    let senderDestination: string | undefined = undefined;
+    if (typeof req.body.sender === 'string') {
+      if (!req.body.sender.startsWith(peerID)) {
+        throw new RequestError('Invalid sender');
+      } else {
+        const destination = req.body.sender.substring(peerID.length + 1);
+        if(destination.length > 0) {
+          senderDestination = destination;
+        }
+      }
+    }
+    let recipientID: string;
+    let recipientDestination: string | undefined = undefined;
+    if (typeof req.body.recipient === 'string') {
+      const index = req.body.recipient.indexOf(utils.constants.ID_SEGMENT_SEPARATOR);
+      if (index !== -1) {
+        recipientID = req.body.recipient.substring(0, index);
+        const destination = req.body.recipient.substring(index + 1);
+        if(destination.length > 0) {
+          recipientDestination = destination;
+        }
+      } else {
+        recipientID = req.body.recipient;
+      }
+    } else {
       throw new RequestError('Missing recipient', 400);
     }
-    let recipientURL = config.peers.find(peer => peer.id === req.body.recipient)?.endpoint;
+    let recipientURL = config.peers.find(peer => peer.id === recipientID)?.endpoint;
     if (recipientURL === undefined) {
       throw new RequestError(`Unknown recipient`, 400);
     }
     let requestId = uuidV4();
-    if(typeof req.body.requestId === 'string') {
+    if (typeof req.body.requestId === 'string') {
       requestId = req.body.requestId;
     }
-    blobsHandler.sendBlob(req.body.path, req.body.recipient, recipientURL, requestId);
+    blobsHandler.sendBlob(req.body.path, recipientID, recipientURL, requestId, senderDestination, recipientDestination);
     res.send({ requestId });
   } catch (err) {
     next(err);
