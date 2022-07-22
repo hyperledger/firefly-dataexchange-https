@@ -136,7 +136,10 @@ router.post('/messages', async (req, res, next) => {
       if (!req.body.sender.startsWith(peerID)) {
         throw new RequestError('Invalid sender');
       } else {
-        senderDestination = req.body.sender.substring(peerID.length + 1);
+        const destination = req.body.sender.substring(peerID.length + 1);
+        if(destination.length > 0) {
+          senderDestination = destination;
+        }
       }
     }
     let recipientID: string;
@@ -145,7 +148,10 @@ router.post('/messages', async (req, res, next) => {
       const index = req.body.recipient.indexOf(utils.constants.ID_SEGMENT_SEPARATOR);
       if (index !== -1) {
         recipientID = req.body.recipient.substring(0, index);
-        recipientDestination = req.body.recipient.substring(index + 1);
+        const destination = req.body.recipient.substring(index + 1);
+        if(destination.length > 0) {
+          recipientDestination = destination;
+        }
       } else {
         recipientID = req.body.recipient;
       }
@@ -228,7 +234,10 @@ router.post('/transfers', async (req, res, next) => {
       if (!req.body.sender.startsWith(peerID)) {
         throw new RequestError('Invalid sender');
       } else {
-        senderDestination = req.body.sender.substring(peerID.length + 1);
+        const destination = req.body.sender.substring(peerID.length + 1);
+        if(destination.length > 0) {
+          senderDestination = destination;
+        }
       }
     }
     let recipientID: string;
@@ -237,7 +246,10 @@ router.post('/transfers', async (req, res, next) => {
       const index = req.body.recipient.indexOf(utils.constants.ID_SEGMENT_SEPARATOR);
       if (index !== -1) {
         recipientID = req.body.recipient.substring(0, index);
-        recipientDestination = req.body.recipient.substring(index + 1);
+        const destination = req.body.recipient.substring(index + 1);
+        if(destination.length > 0) {
+          recipientDestination = destination;
+        }
       } else {
         recipientID = req.body.recipient;
       }
