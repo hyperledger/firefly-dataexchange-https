@@ -1,4 +1,4 @@
-// Copyright © 2021 Kaleido, Inc.
+// Copyright © 2022 Kaleido, Inc.
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -179,7 +179,7 @@ router.head('/blobs/*', async (req: Request, res, next) => {
     if (!utils.regexp.FILE_KEY.test(blobPath) || utils.regexp.CONSECUTIVE_DOTS.test(blobPath)) {
       throw new RequestError('Invalid path', 400);
     }
-    const metadata = await blobsHandler.retreiveMetadata(blobPath);
+    const metadata = await blobsHandler.retrieveMetadata(blobPath);
     res.setHeader(utils.constants.HASH_HEADER_NAME, metadata.hash);
     res.setHeader(utils.constants.SIZE_HEADER_NAME, metadata.size);
     res.setHeader(utils.constants.LAST_UPDATE_HEADER_NAME, metadata.lastUpdate);
@@ -195,11 +195,11 @@ router.get('/blobs/*', async (req: Request, res, next) => {
     if (!utils.regexp.FILE_KEY.test(blobPath) || utils.regexp.CONSECUTIVE_DOTS.test(blobPath)) {
       throw new RequestError('Invalid path', 400);
     }
-    const metadata = await blobsHandler.retreiveMetadata(blobPath);
+    const metadata = await blobsHandler.retrieveMetadata(blobPath);
     res.setHeader(utils.constants.HASH_HEADER_NAME, metadata.hash);
     res.setHeader(utils.constants.SIZE_HEADER_NAME, metadata.size);
     res.setHeader(utils.constants.LAST_UPDATE_HEADER_NAME, metadata.lastUpdate);
-    const blobStream = await blobsHandler.retreiveBlob(blobPath);
+    const blobStream = await blobsHandler.retrieveBlob(blobPath);
     blobStream.pipe(res);
   } catch (err) {
     next(err);
@@ -228,7 +228,7 @@ router.post('/transfers', async (req, res, next) => {
     if (!utils.regexp.FILE_KEY.test(req.body.path) || utils.regexp.CONSECUTIVE_DOTS.test(req.body.path)) {
       throw new RequestError('Invalid path', 400);
     }
-    await blobsHandler.retreiveMetadata(path.join(utils.constants.DATA_DIRECTORY, utils.constants.BLOBS_SUBDIRECTORY, req.body.path));
+    await blobsHandler.retrieveMetadata(req.body.path);
     let senderDestination: string | undefined = undefined;
     if (typeof req.body.sender === 'string') {
       if (!req.body.sender.startsWith(peerID)) {

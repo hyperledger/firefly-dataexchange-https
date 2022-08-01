@@ -1,4 +1,4 @@
-// Copyright © 2021 Kaleido, Inc.
+// Copyright © 2022 Kaleido, Inc.
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -33,7 +33,7 @@ const log = new Logger("handlers/blobs.ts")
 let blobQueue: BlobTask[] = [];
 let sending = false;
 
-export const retreiveBlob = async (filePath: string) => {
+export const retrieveBlob = async (filePath: string) => {
   const resolvedFilePath = path.join(utils.constants.DATA_DIRECTORY, utils.constants.BLOBS_SUBDIRECTORY, filePath);
   if (!(await utils.fileExists(resolvedFilePath))) {
     throw new RequestError(`Blob content missing from storage`, 404);
@@ -133,7 +133,7 @@ export const deliverBlob = async ({ blobPath, recipientID, recipientURL, request
   }
 };
 
-export const retreiveMetadata = async (filePath: string) => {
+export const retrieveMetadata = async (filePath: string) => {
   const resolvedFilePath = path.join(utils.constants.DATA_DIRECTORY, utils.constants.BLOBS_SUBDIRECTORY, filePath + utils.constants.METADATA_SUFFIX);
   if (!(await utils.fileExists(resolvedFilePath))) {
     throw new RequestError(`Blob not found`, 404);
