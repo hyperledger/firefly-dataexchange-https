@@ -176,7 +176,7 @@
       get:
         tags:
           - Blobs
-        description: Retreive blob
+        description: Retrieve blob
         responses:
           '200':
             description: Blob content

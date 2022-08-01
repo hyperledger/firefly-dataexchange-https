@@ -1,4 +1,4 @@
-// Copyright © 2021 Kaleido, Inc.
+// Copyright © 2022 Kaleido, Inc.
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -17,23 +17,24 @@
 import FormData from 'form-data';
 import https from 'https';
 import { v4 as uuidV4 } from 'uuid';
-import { ca, cert, key } from '../lib/cert';
+import { ca, cert, key, peerID } from '../lib/cert';
 import { IMessageDeliveredEvent, IMessageFailedEvent, MessageTask } from '../lib/interfaces';
 import { Logger } from '../lib/logger';
 import * as utils from '../lib/utils';
 import { queueEvent } from './events';
 
-const log = new Logger('handlers/messages.ts')
+const log = new Logger('handlers/messages.ts');
 
 let messageQueue: MessageTask[] = [];
 let sending = false;
 
-export const sendMessage = async (message: string, recipient: string, recipientURL: string, requestId: string | undefined) => {
+export const sendMessage = async (message: string, recipientID: string, recipientURL: string, requestId: string | undefined,
+  senderDestination: string | undefined, recipientDestination: string | undefined) => {
   if (sending) {
-    messageQueue.push({ message, recipient, recipientURL, requestId });
+    messageQueue.push({ message, recipientID, recipientURL, requestId, senderDestination, recipientDestination });
   } else {
     sending = true;
-    messageQueue.push({ message, recipient, recipientURL, requestId });
+    messageQueue.push({ message, recipientID, recipientURL, requestId, senderDestination, recipientDestination });
     while (messageQueue.length > 0) {
       await deliverMessage(messageQueue.shift()!);
     }
@@ -41,9 +42,19 @@ export const sendMessage = async (message: string, recipient: string, recipientU
   }
 };
 
-export const deliverMessage = async ({ message, recipient, recipientURL, requestId }: MessageTask) => {
+export const deliverMessage = async ({ message, recipientID, recipientURL, requestId, senderDestination, recipientDestination }: MessageTask) => {
   const httpsAgent = new https.Agent({ cert, key, ca });
   const formData = new FormData();
+  let sender = peerID;
+  if(senderDestination !== undefined) {
+    formData.append('senderDestination', senderDestination);
+    sender += utils.constants.ID_SEGMENT_SEPARATOR + senderDestination
+  }
+  let recipient = recipientID;
+  if(recipientDestination !== undefined) {
+    formData.append('recipientDestination', recipientDestination);
+    recipient += utils.constants.ID_SEGMENT_SEPARATOR + recipientDestination;
+  }
   formData.append('message', message);
   log.trace(`Delivering message to ${recipient} at ${recipientURL}`);
   try {
@@ -58,6 +69,7 @@ export const deliverMessage = async ({ message, recipient, recipientURL, request
       id: uuidV4(),
       type: 'message-delivered',
       message,
+      sender,
       recipient,
       requestId
     } as IMessageDeliveredEvent);
@@ -67,6 +79,7 @@ export const deliverMessage = async ({ message, recipient, recipientURL, request
       id: uuidV4(),
       type: 'message-failed',
       message,
+      sender,
       recipient,
       requestId,
       error: err.message,
