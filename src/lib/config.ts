@@ -28,6 +28,7 @@ const ajv = new Ajv();
 const validateConfig = ajv.compile(configSchema);
 const configFilePath = path.join(utils.constants.DATA_DIRECTORY, utils.constants.CONFIG_FILE_NAME);
 const peersFilePath = path.join(utils.constants.DATA_DIRECTORY, utils.constants.PEERS_FILE_NAME);
+const destinationsFilePath = path.join(utils.constants.DATA_DIRECTORY, utils.constants.DESTINATIONS_FILE_NAME);
 
 export let config: IConfig;
 
@@ -39,6 +40,18 @@ const loadConfig = async () => {
   try {
     log.debug(`Reading config file ${configFilePath}`);
     const data = JSON.parse(await fs.readFile(configFilePath, 'utf8'));
+    try {
+      log.debug(`Reading destinations file ${destinationsFilePath}`);
+      data.destinations = JSON.parse(await fs.readFile(destinationsFilePath, 'utf8'));
+    } catch (err: any) {
+      // if file does not exist, just set destinations to an empty array
+      log.debug(`Error code when reading destinations file ${err.code}`);
+      if (err.code === 'ENOENT') {
+        data.destinations = data.destinations;
+      } else {
+        throw err;
+      }
+    }
     try {
       log.debug(`Reading peers file ${peersFilePath}`);
       data.peers = JSON.parse(await fs.readFile(peersFilePath, 'utf8'));
@@ -68,28 +81,32 @@ const loadConfig = async () => {
 };
 
 export const persistPeers = async () => {
-  await ensurePeersDirectoryExists();
+  await ensureDirectoryExists(peersFilePath);
   await fs.writeFile(peersFilePath, JSON.stringify(config.peers, null, 2));
 };
 
+export const persistDestinations = async () => {
+  await ensureDirectoryExists(destinationsFilePath);
+  await fs.writeFile(destinationsFilePath, JSON.stringify(config.destinations, null, 2));
+};
 
-const ensurePeersDirectoryExists = async () => {
+const ensureDirectoryExists = async (directory: string) => {
   try {
-    await fs.access(peersFilePath);
+    await fs.access(directory);
   } catch(err: any) {
     if(err.code === 'ENOENT') {
-      await createPeersDirectory();
+      await createPeersDirectory(directory);
     } else {
-      log.warn(`Could not check for existence of peers subdirectory ${err.code}`);
+      log.warn(`Could not check for existence of ${err.code}`);
     }
   }
 };
 
-const createPeersDirectory = async () => {
+const createPeersDirectory = async (directory: string) => {
   try {
-    await fs.mkdir(path.parse(peersFilePath).dir, { recursive: true });
-    log.info('Peers subdirectory created');
+    await fs.mkdir(path.parse(directory).dir, { recursive: true });
+    log.info(`Directory ${directory} created`);
   } catch(err: any) {
-    log.error(`Failed to create peers subdirectory ${err.code}`);
+    log.error(`Failed to create directory ${directory} ${err.code}`);
   }
 };

@@ -43,6 +43,12 @@
     "apiKey": {
       "type": "string"
     },
+    "destinations": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
     "peers": {
       "type": "array",
       "items": {
@@ -57,6 +63,12 @@
           },
           "endpoint": {
             "type": "string"
+          },
+          "destinations": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         }
       }
