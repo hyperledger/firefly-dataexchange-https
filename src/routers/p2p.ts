@@ -36,18 +36,24 @@ router.post('/messages', async (req: Request, res, next) => {
     let sender = utils.extractPeerSenderFromRequest(req);
     const { senderDestination, recipientDestination, message } = await utils.extractMessageFromMultipartForm(req);
     if (senderDestination !== undefined) {
-      const peer = config.peers.find(peer => peer.id === sender);
-      if(peer === undefined) {
-        throw new RequestError(`Unknown sender ${sender}`, 404);
-      }
-      if(!peer.destinations?.includes(senderDestination)) {
-        throw new RequestError(`Unknown sender destination expected=${peer.destinations?.join('|') ?? 'none'} recieved=${senderDestination}`, 404);
+      if (sender === peerID) {
+        if (!config.destinations?.includes(senderDestination)) {
+          throw new RequestError(`Unknown sender destination expected=${config.destinations?.join('|') ?? 'none'} recieved=${senderDestination}`, 404);
+        }
+      } else {
+        const peer = config.peers.find(peer => peer.id === sender);
+        if (peer === undefined) {
+          throw new RequestError(`Unknown sender ${sender}`, 404);
+        }
+        if (!peer.destinations?.includes(senderDestination)) {
+          throw new RequestError(`Unknown sender destination expected=${peer.destinations?.join('|') ?? 'none'} recieved=${senderDestination}`, 404);
+        }
       }
       sender += '/' + senderDestination;
     }
     let recipient = peerID;
     if (recipientDestination !== undefined) {
-      if(!config.destinations?.includes(recipientDestination)) {
+      if (!config.destinations?.includes(recipientDestination)) {
         throw new RequestError(`Unknown recipient destination expected=${config.destinations?.join('|') ?? 'none'} recieved=${recipientDestination}`, 404);
       }
       recipient += '/' + recipientDestination;
