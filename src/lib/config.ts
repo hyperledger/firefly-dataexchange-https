@@ -95,14 +95,14 @@ const ensureDirectoryExists = async (directory: string) => {
     await fs.access(directory);
   } catch(err: any) {
     if(err.code === 'ENOENT') {
-      await createPeersDirectory(directory);
+      await createDirectory(directory);
     } else {
       log.warn(`Could not check for existence of ${err.code}`);
     }
   }
 };
 
-const createPeersDirectory = async (directory: string) => {
+const createDirectory = async (directory: string) => {
   try {
     await fs.mkdir(path.parse(directory).dir, { recursive: true });
     log.info(`Directory ${directory} created`);
