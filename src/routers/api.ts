@@ -175,7 +175,7 @@ router.post('/messages', async (req, res, next) => {
       throw new RequestError('Missing recipient', 400);
     }
     let recipientEndpoint: string;
-    if(recipientID === peerID) {
+    if (recipientID === peerID) {
       recipientEndpoint = config.p2p.endpoint ?? `https://${config.p2p.hostname}:${config.p2p.port}`;
     } else {
       let recipientPeer = config.peers.find(peer => peer.id === recipientID);
@@ -278,18 +278,23 @@ router.post('/transfers', async (req, res, next) => {
     } else {
       throw new RequestError('Missing recipient', 400);
     }
-    let recipientPeer = config.peers.find(peer => peer.id === recipientID);
-    if (recipientPeer === undefined) {
-      throw new RequestError(`Unknown recipient`, 400);
-    }
-    if (recipientDestination !== undefined && !recipientPeer.destinations?.includes(recipientDestination)) {
-      throw new RequestError(`Unknown recipient destination expected=${recipientPeer.destinations?.join('|')} recieved=${recipientDestination}`, 400);
+    let recipientEndpoint: string;
+    recipientEndpoint = config.p2p.endpoint ?? `https://${config.p2p.hostname}:${config.p2p.port}`;
+    if (recipientID === peerID) {
+    } else {
+      let recipientPeer = config.peers.find(peer => peer.id === recipientID);
+      if (recipientPeer === undefined) {
+        throw new RequestError(`Unknown recipient`, 400);
+      }
+      if (recipientDestination !== undefined && !recipientPeer.destinations?.includes(recipientDestination)) {
+        throw new RequestError(`Unknown recipient destination expected=${recipientPeer.destinations?.join('|')} recieved=${recipientDestination}`, 400);
+      }
     }
     let requestId = uuidV4();
     if (typeof req.body.requestId === 'string') {
       requestId = req.body.requestId;
     }
-    blobsHandler.sendBlob(req.body.path, recipientID, recipientPeer.endpoint, requestId, senderDestination, recipientDestination);
+    blobsHandler.sendBlob(req.body.path, recipientID, recipientEndpoint, requestId, senderDestination, recipientDestination);
     res.send({ requestId });
   } catch (err) {
     next(err);
