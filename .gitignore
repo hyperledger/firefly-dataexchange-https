@@ -3,4 +3,6 @@ build
 coverage
 .nyc_output
 data/member-a/blobs
+data/member-a/destinations
 data/member-b/blobs
+data/member-b/destinations

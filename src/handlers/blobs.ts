@@ -91,12 +91,12 @@ export const deliverBlob = async ({ blobPath, recipientID, recipientURL, request
   let sender = peerID;
   if(senderDestination !== undefined) {
     formData.append('senderDestination', senderDestination);
-    sender += utils.constants.ID_SEGMENT_SEPARATOR + senderDestination
+    sender += '/' + senderDestination
   }
   let recipient = recipientID;
   if(recipientDestination !== undefined) {
     formData.append('recipientDestination', recipientDestination);
-    recipient += utils.constants.ID_SEGMENT_SEPARATOR + recipientDestination;
+    recipient += '/' + recipientDestination;
   }
   formData.append('blob', stream);
   const httpsAgent = new https.Agent({ cert, key, ca });

@@ -36,6 +36,7 @@ export const constants = {
   CERT_FILE: 'cert.pem',
   KEY_FILE: 'key.pem',
   CA_FILE: 'ca.pem',
+  DESTINATIONS_FILE_NAME: 'destinations/data.json',
   TRANSFER_HASH_ALGORITHM: 'sha256',
   REST_API_CALL_MAX_ATTEMPTS: 5,
   REST_API_CALL_RETRY_DELAY_MS: 500,
@@ -46,8 +47,7 @@ export const constants = {
   SIZE_HEADER_NAME: 'dx-size',
   LAST_UPDATE_HEADER_NAME: 'dx-last-update',
   DEFAULT_JSON_PARSER_LIMIT: '1mb',
-  DEFAULT_MAX_INFLIGHT: 100,
-  ID_SEGMENT_SEPARATOR: '/'
+  DEFAULT_MAX_INFLIGHT: 100
 };
 const log = new Logger('utils.ts');
 axios.defaults.timeout = constants.REST_API_CALL_REQUEST_TIMEOUT;
@@ -140,7 +140,7 @@ export const axiosWithRetry = async (config: AxiosRequestConfig) => {
       const data = err.response?.data;
       log.error(`${config.method} ${config.url} attempt ${attempts} [${err.response?.status}]`, (data && !data.on) ? data : err.stack);
       if (err.response?.status === 404) {
-        throw err;
+        throw data.error ? new Error(data.error) : err;
       } else {
         currentError = err;
         attempts++;

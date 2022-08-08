@@ -29,9 +29,11 @@ export interface IConfig {
     endpoint?: string
   }
   apiKey?: string
+  destinations?: string[]
   peers: {
     id: string
     endpoint: string
+    destinations?: string[]
   }[]
   jsonParserLimit?: string
 }

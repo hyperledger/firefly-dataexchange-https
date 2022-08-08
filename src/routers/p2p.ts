@@ -22,6 +22,8 @@ import { IBlobReceivedEvent, IMessageReceivedEvent } from '../lib/interfaces';
 import { v4 as uuidV4 } from 'uuid';
 import { queueEvent } from '../handlers/events';
 import { peerID } from '../lib/cert';
+import { config } from '../lib/config';
+import RequestError from '../lib/request-error';
 
 export const router = Router();
 
@@ -34,11 +36,15 @@ router.post('/messages', async (req: Request, res, next) => {
     let sender = utils.extractPeerSenderFromRequest(req);
     const { senderDestination, recipientDestination, message } = await utils.extractMessageFromMultipartForm(req);
     if (senderDestination !== undefined) {
-      sender += utils.constants.ID_SEGMENT_SEPARATOR + senderDestination;
+      validateSenderDestination(sender, senderDestination);
+      sender += '/' + senderDestination;
     }
     let recipient = peerID;
     if (recipientDestination !== undefined) {
-      recipient += utils.constants.ID_SEGMENT_SEPARATOR + recipientDestination;
+      if (!config.destinations?.includes(recipientDestination)) {
+        throw new RequestError(`Unknown recipient destination expected=${config.destinations?.join('|') ?? 'none'} recieved=${recipientDestination}`, 404);
+      }
+      recipient += '/' + recipientDestination;
     }
     await queueEvent({
       id: uuidV4(),
@@ -58,11 +64,15 @@ router.put('/blobs/*', async (req: Request, res, next) => {
     let sender = utils.extractPeerSenderFromRequest(req);
     const { file, senderDestination, recipientDestination } = await utils.extractFileFromMultipartForm(req);
     if (senderDestination !== undefined) {
-      sender += utils.constants.ID_SEGMENT_SEPARATOR + senderDestination;
+      validateSenderDestination(sender, senderDestination);
+      sender += '/' + senderDestination;
     }
     let recipient = peerID;
     if (recipientDestination !== undefined) {
-      recipient += utils.constants.ID_SEGMENT_SEPARATOR + recipientDestination;
+      if (!config.destinations?.includes(recipientDestination)) {
+        throw new RequestError(`Unknown recipient destination expected=${config.destinations?.join('|') ?? 'none'} recieved=${recipientDestination}`, 404);
+      }
+      recipient += '/' + recipientDestination;
     }
     const blobPath = path.join(utils.constants.RECEIVED_BLOBS_SUBDIRECTORY, sender, req.params[0]);
     const metadata = await blobsHandler.storeBlob(file, blobPath);
@@ -81,3 +91,19 @@ router.put('/blobs/*', async (req: Request, res, next) => {
     next(err);
   }
 });
+
+const validateSenderDestination = (sender: string, senderDestination: string) => {
+  if (sender === peerID) {
+    if (!config.destinations?.includes(senderDestination)) {
+      throw new RequestError(`Unknown sender destination expected=${config.destinations?.join('|') ?? 'none'} recieved=${senderDestination}`, 404);
+    }
+  } else {
+    const peer = config.peers.find(peer => peer.id === sender);
+    if (peer === undefined) {
+      throw new RequestError(`Unknown sender ${sender}`, 404);
+    }
+    if (!peer.destinations?.includes(senderDestination)) {
+      throw new RequestError(`Unknown sender destination expected=${peer.destinations?.join('|') ?? 'none'} recieved=${senderDestination}`, 404);
+    }
+  }
+};

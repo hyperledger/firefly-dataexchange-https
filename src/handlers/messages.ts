@@ -48,12 +48,12 @@ export const deliverMessage = async ({ message, recipientID, recipientURL, reque
   let sender = peerID;
   if(senderDestination !== undefined) {
     formData.append('senderDestination', senderDestination);
-    sender += utils.constants.ID_SEGMENT_SEPARATOR + senderDestination
+    sender += '/' + senderDestination
   }
   let recipient = recipientID;
   if(recipientDestination !== undefined) {
     formData.append('recipientDestination', recipientDestination);
-    recipient += utils.constants.ID_SEGMENT_SEPARATOR + recipientDestination;
+    recipient += '/' + recipientDestination;
   }
   formData.append('message', message);
   log.trace(`Delivering message to ${recipient} at ${recipientURL}`);

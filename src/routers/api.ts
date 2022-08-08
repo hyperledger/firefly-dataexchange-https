@@ -23,7 +23,7 @@ import * as blobsHandler from '../handlers/blobs';
 import * as eventsHandler from '../handlers/events';
 import * as messagesHandler from '../handlers/messages';
 import { ca, cert, certBundle, key, peerID } from '../lib/cert';
-import { config, persistPeers } from '../lib/config';
+import { config, persistDestinations, persistPeers } from '../lib/config';
 import { IStatus } from '../lib/interfaces';
 import RequestError from '../lib/request-error';
 import * as utils from '../lib/utils';
@@ -41,7 +41,8 @@ router.get('/id', async (_req, res, next) => {
     res.send({
       id: peerID,
       endpoint: config.p2p.endpoint ?? `https://${config.p2p.hostname}:${config.p2p.port}`,
-      cert: certBundle
+      cert: certBundle,
+      destinations: config.destinations
     });
   } catch (err) {
     next(err);
@@ -82,24 +83,42 @@ router.get('/peers', (_req, res) => {
   res.send(config.peers);
 });
 
-router.put('/peers/:id', async (req, res, next) => {
+router.put('/peers/:id/:destination?', async (req, res, next) => {
   try {
-    if (req.body.endpoint === undefined) {
-      throw new RequestError('Missing endpoint', 400);
+    if (req.params.id === peerID) {
+      if (req.params.destination !== undefined) {
+        if (config.destinations === undefined) {
+          config.destinations = [req.params.destination]
+        } else if (!config.destinations.includes(req.params.destination)) {
+          config.destinations.push(req.params.destination);
+        }
+        await persistDestinations();
+      }
+    } else {
+      let peer = config.peers.find(peer => peer.id === req.params.id);
+      if (peer === undefined) {
+        if (req.body.endpoint === undefined) {
+          throw new RequestError('Missing endpoint', 400);
+        }
+        peer = {
+          id: req.params.id,
+          endpoint: req.body.endpoint
+        };
+        config.peers.push(peer);
+      }
+      if (req.params.destination !== undefined) {
+        if (peer.destinations === undefined) {
+          peer.destinations = [req.params.destination];
+        } else if (!peer.destinations.includes(req.params.destination)) {
+          peer.destinations.push(req.params.destination);
+        }
+      }
+      await persistPeers();
+      if (req.body.cert !== undefined) {
+        await fs.writeFile(path.join(utils.constants.DATA_DIRECTORY, utils.constants.PEER_CERTS_SUBDIRECTORY, `${req.params.id}.pem`), req.body.cert);
+        await refreshCACerts();
+      }
     }
-    if (req.body.cert !== undefined) {
-      await fs.writeFile(path.join(utils.constants.DATA_DIRECTORY, utils.constants.PEER_CERTS_SUBDIRECTORY, `${req.params.id}.pem`), req.body.cert);
-    }
-    let peer = config.peers.find(peer => peer.id === req.params.id);
-    if (peer === undefined) {
-      peer = {
-        id: req.params.id,
-        endpoint: req.body.endpoint
-      };
-      config.peers.push(peer);
-    }
-    await persistPeers();
-    await refreshCACerts();
     res.send({ status: 'added' });
   } catch (err) {
     next(err);
@@ -133,40 +152,46 @@ router.post('/messages', async (req, res, next) => {
     }
     let senderDestination: string | undefined = undefined;
     if (typeof req.body.sender === 'string') {
-      if (!req.body.sender.startsWith(peerID)) {
-        throw new RequestError('Invalid sender');
-      } else {
-        const destination = req.body.sender.substring(peerID.length + 1);
-        if(destination.length > 0) {
-          senderDestination = destination;
+      const segments = req.body.sender.split('/');
+      if (segments[0] !== peerID) {
+        throw new RequestError(`Sender ID mismatch expected=${peerID} recieved=${segments[0]}`, 400);
+      }
+      if (segments.length > 1) {
+        if (!config.destinations?.includes(segments[1])) {
+          throw new RequestError(`Unknown sender destination expected=${config.destinations?.join('|') ?? 'none'} recieved=${segments[1]}`, 400);
         }
+        senderDestination = segments[1];
       }
     }
     let recipientID: string;
     let recipientDestination: string | undefined = undefined;
     if (typeof req.body.recipient === 'string') {
-      const index = req.body.recipient.indexOf(utils.constants.ID_SEGMENT_SEPARATOR);
-      if (index !== -1) {
-        recipientID = req.body.recipient.substring(0, index);
-        const destination = req.body.recipient.substring(index + 1);
-        if(destination.length > 0) {
-          recipientDestination = destination;
-        }
-      } else {
-        recipientID = req.body.recipient;
+      const segments = req.body.recipient.split('/');
+      recipientID = segments[0];
+      if (segments.length > 1) {
+        recipientDestination = segments[1];
       }
     } else {
       throw new RequestError('Missing recipient', 400);
     }
-    let recipientURL = config.peers.find(peer => peer.id === recipientID)?.endpoint;
-    if (recipientURL === undefined) {
-      throw new RequestError(`Unknown recipient`, 400);
+    let recipientEndpoint: string;
+    if (recipientID === peerID) {
+      recipientEndpoint = config.p2p.endpoint ?? `https://${config.p2p.hostname}:${config.p2p.port}`;
+    } else {
+      let recipientPeer = config.peers.find(peer => peer.id === recipientID);
+      if (recipientPeer === undefined) {
+        throw new RequestError(`Unknown recipient ${recipientID}`, 400);
+      }
+      recipientEndpoint = recipientPeer.endpoint;
+      if (recipientDestination !== undefined && !recipientPeer.destinations?.includes(recipientDestination)) {
+        throw new RequestError(`Unknown recipient destination expected=${recipientPeer.destinations?.join('|') ?? 'none'} recieved=${recipientDestination}`, 400);
+      }
     }
     let requestId = uuidV4();
     if (typeof req.body.requestId === 'string') {
       requestId = req.body.requestId;
     }
-    messagesHandler.sendMessage(req.body.message, recipientID, recipientURL, requestId, senderDestination, recipientDestination);
+    messagesHandler.sendMessage(req.body.message, recipientID, recipientEndpoint, requestId, senderDestination, recipientDestination);
     res.send({ requestId });
   } catch (err) {
     next(err);
@@ -231,40 +256,46 @@ router.post('/transfers', async (req, res, next) => {
     await blobsHandler.retrieveMetadata(req.body.path);
     let senderDestination: string | undefined = undefined;
     if (typeof req.body.sender === 'string') {
-      if (!req.body.sender.startsWith(peerID)) {
-        throw new RequestError('Invalid sender');
-      } else {
-        const destination = req.body.sender.substring(peerID.length + 1);
-        if(destination.length > 0) {
-          senderDestination = destination;
+      const segments = req.body.sender.split('/');
+      if (segments[0] !== peerID) {
+        throw new RequestError(`Sender ID mismatch expected=${peerID} recieved=${segments[0]}`, 400);
+      }
+      if (segments.length > 1) {
+        if (!config.destinations?.includes(segments[1])) {
+          throw new RequestError(`Unknown sender destination expected=${config.destinations?.join('|')} recieved=${segments[1]}`, 400);
         }
+        senderDestination = segments[1];
       }
     }
     let recipientID: string;
     let recipientDestination: string | undefined = undefined;
     if (typeof req.body.recipient === 'string') {
-      const index = req.body.recipient.indexOf(utils.constants.ID_SEGMENT_SEPARATOR);
-      if (index !== -1) {
-        recipientID = req.body.recipient.substring(0, index);
-        const destination = req.body.recipient.substring(index + 1);
-        if(destination.length > 0) {
-          recipientDestination = destination;
-        }
-      } else {
-        recipientID = req.body.recipient;
+      const segments = req.body.recipient.split('/');
+      recipientID = segments[0];
+      if (segments.length > 1) {
+        recipientDestination = segments[1];
       }
     } else {
       throw new RequestError('Missing recipient', 400);
     }
-    let recipientURL = config.peers.find(peer => peer.id === recipientID)?.endpoint;
-    if (recipientURL === undefined) {
-      throw new RequestError(`Unknown recipient`, 400);
+    let recipientEndpoint: string;
+    if (recipientID === peerID) {
+      recipientEndpoint = config.p2p.endpoint ?? `https://${config.p2p.hostname}:${config.p2p.port}`;
+    } else {
+      let recipientPeer = config.peers.find(peer => peer.id === recipientID);
+      if (recipientPeer === undefined) {
+        throw new RequestError(`Unknown recipient`, 400);
+      }
+      if (recipientDestination !== undefined && !recipientPeer.destinations?.includes(recipientDestination)) {
+        throw new RequestError(`Unknown recipient destination expected=${recipientPeer.destinations?.join('|')} recieved=${recipientDestination}`, 400);
+      }
+      recipientEndpoint = recipientPeer.endpoint;
     }
     let requestId = uuidV4();
     if (typeof req.body.requestId === 'string') {
       requestId = req.body.requestId;
     }
-    blobsHandler.sendBlob(req.body.path, recipientID, recipientURL, requestId, senderDestination, recipientDestination);
+    blobsHandler.sendBlob(req.body.path, recipientID, recipientEndpoint, requestId, senderDestination, recipientDestination);
     res.send({ requestId });
   } catch (err) {
     next(err);
