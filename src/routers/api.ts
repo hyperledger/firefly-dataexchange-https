@@ -279,8 +279,8 @@ router.post('/transfers', async (req, res, next) => {
       throw new RequestError('Missing recipient', 400);
     }
     let recipientEndpoint: string;
-    recipientEndpoint = config.p2p.endpoint ?? `https://${config.p2p.hostname}:${config.p2p.port}`;
     if (recipientID === peerID) {
+      recipientEndpoint = config.p2p.endpoint ?? `https://${config.p2p.hostname}:${config.p2p.port}`;
     } else {
       let recipientPeer = config.peers.find(peer => peer.id === recipientID);
       if (recipientPeer === undefined) {
@@ -289,6 +289,7 @@ router.post('/transfers', async (req, res, next) => {
       if (recipientDestination !== undefined && !recipientPeer.destinations?.includes(recipientDestination)) {
         throw new RequestError(`Unknown recipient destination expected=${recipientPeer.destinations?.join('|')} recieved=${recipientDestination}`, 400);
       }
+      recipientEndpoint = recipientPeer.endpoint;
     }
     let requestId = uuidV4();
     if (typeof req.body.requestId === 'string') {
