@@ -240,6 +240,23 @@
               application/json:
                 schema:
                   $ref: '#/components/schemas/Error'
+      delete:
+        tags:
+          - Blobs
+        description: Delete blob
+        responses:
+          '200':
+            description: Blob metadata
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/BlobMetadata'
+          '500':
+            description: Internal error
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/Error'
     /transfers:
       post:
         tags:
@@ -365,6 +382,17 @@
         properties:
           hash:
             type: string
+      BlobMetadata:
+        type: object
+        required:
+          - hash
+        properties:
+          hash:
+            type: string
+          size:
+            type: number
+          lastUpdate:
+            type: number
       Transfer:
         type: object
         required:

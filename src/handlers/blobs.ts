@@ -59,7 +59,7 @@ export const storeBlob = async (file: IFile, filePath: string) => {
         cb();
       }
     });
-      file.readableStream.on('error', err => {
+    file.readableStream.on('error', err => {
       reject(err);
     });
     file.readableStream.pipe(hashCalculator).pipe(writeStream);
@@ -89,12 +89,12 @@ export const deliverBlob = async ({ blobPath, recipientID, recipientURL, request
   const stream = createReadStream(resolvedFilePath);
   const formData = new FormData();
   let sender = peerID;
-  if(senderDestination !== undefined) {
+  if (senderDestination !== undefined) {
     formData.append('senderDestination', senderDestination);
     sender += '/' + senderDestination
   }
   let recipient = recipientID;
-  if(recipientDestination !== undefined) {
+  if (recipientDestination !== undefined) {
     formData.append('recipientDestination', recipientDestination);
     recipient += '/' + recipientDestination;
   }
@@ -133,6 +133,52 @@ export const deliverBlob = async ({ blobPath, recipientID, recipientURL, request
   }
 };
 
+export const deleteBlob = async (filePath: string) => {
+  const resolvedFilePath = path.join(utils.constants.DATA_DIRECTORY, utils.constants.BLOBS_SUBDIRECTORY, filePath);
+  const resolvedFileMetadataPath = path.join(utils.constants.DATA_DIRECTORY, utils.constants.BLOBS_SUBDIRECTORY, filePath + utils.constants.METADATA_SUFFIX);
+  log.debug(`Deleting blob: ${resolvedFilePath} with metadata: ${resolvedFileMetadataPath}`);
+
+  let tempFileCopy: Buffer | null = null;
+  let tempMetadataCopy = null;
+  let metadata: IMetadata | null = null;
+
+  try {
+    if ((await utils.fileExists(resolvedFilePath))) {
+      // Copy to tmp files
+      tempFileCopy = await fs.readFile(resolvedFilePath);
+      // Attempt file deletion
+      await fs.rm(resolvedFilePath);
+      // Check if deletion succeeded before proceeding to delete the metadata 
+      if (await utils.fileExists(resolvedFilePath)) {
+        throw new RequestError(`Blob deletion failed`);
+      }
+    }
+
+    if ((await utils.fileExists(resolvedFileMetadataPath))) {
+      tempMetadataCopy = await fs.readFile(resolvedFileMetadataPath);
+      // Retrieve metadata to return with response
+      metadata = await retrieveMetadata(filePath);
+      await fs.rm(resolvedFileMetadataPath);
+      if (await utils.fileExists(resolvedFileMetadataPath)) {
+        throw new RequestError(`Blob metadata deletion failed`);
+      }
+    }
+    return metadata;
+  }
+  catch (err) {
+    log.error(`Error while attempting to delete Blob: ${err}`);
+
+    // Restore any deleted files
+    if (tempFileCopy && !(await utils.fileExists(resolvedFilePath))) {
+      await fs.writeFile(resolvedFilePath, <Buffer>tempFileCopy);
+    }
+    if (tempMetadataCopy && !(await utils.fileExists(resolvedFileMetadataPath))) {
+      await fs.writeFile(resolvedFileMetadataPath, <Buffer>tempMetadataCopy);
+    }
+  }
+
+}
+
 export const retrieveMetadata = async (filePath: string) => {
   const resolvedFilePath = path.join(utils.constants.DATA_DIRECTORY, utils.constants.BLOBS_SUBDIRECTORY, filePath + utils.constants.METADATA_SUFFIX);
   if (!(await utils.fileExists(resolvedFilePath))) {
@@ -141,7 +187,7 @@ export const retrieveMetadata = async (filePath: string) => {
   try {
     const metadataString = await fs.readFile(resolvedFilePath);
     return JSON.parse(metadataString.toString()) as IMetadata;
-  } catch(err) {
+  } catch (err) {
     throw new RequestError(`Invalid blob`);
   }
 };
@@ -157,3 +203,4 @@ export const upsertMetadata = async (filePath: string, hash: string, size: numbe
   await fs.writeFile(resolvedFilePath, JSON.stringify(metadata));
   return metadata;
 };
+
