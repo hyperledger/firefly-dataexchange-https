@@ -67,6 +67,12 @@ export const storeBlob = async (file: IFile, filePath: string) => {
   return await upsertMetadata(filePath, blobHash, blobSize);
 };
 
+export const deleteBlob = async (filePath: string) => {
+  const resolvedFilePath = path.join(utils.constants.DATA_DIRECTORY, utils.constants.BLOBS_SUBDIRECTORY, filePath);
+  await deleteMetadata(filePath);
+  await fs.rm(resolvedFilePath);
+}
+
 export const sendBlob = async (blobPath: string, recipientID: string, recipientURL: string, requestId: string | undefined,
   senderDestination: string | undefined, recipientDestination: string | undefined) => {
   if (sending) {
@@ -156,4 +162,9 @@ export const upsertMetadata = async (filePath: string, hash: string, size: numbe
   };
   await fs.writeFile(resolvedFilePath, JSON.stringify(metadata));
   return metadata;
+};
+
+export const deleteMetadata = async (filePath: string) => {
+  const resolvedFilePath = path.join(utils.constants.DATA_DIRECTORY, utils.constants.BLOBS_SUBDIRECTORY, filePath + utils.constants.METADATA_SUFFIX);
+  await fs.rm(resolvedFilePath);
 };
