@@ -239,6 +239,19 @@ router.put('/blobs/*', async (req: Request, res, next) => {
   }
 });
 
+router.delete('/blobs/*', async (req: Request, res, next) => {
+  try {
+    const blobPath = `/${req.params[0]}`;
+    if (!utils.regexp.FILE_KEY.test(blobPath) || utils.regexp.CONSECUTIVE_DOTS.test(blobPath)) {
+      throw new RequestError('Invalid path', 400);
+    }
+    await blobsHandler.deleteBlob(blobPath);
+    res.status(204).send();
+  } catch (err) {
+    next(err);
+  }
+});
+
 router.post('/transfers', async (req, res, next) => {
   try {
     if (req.body.path === undefined) {
