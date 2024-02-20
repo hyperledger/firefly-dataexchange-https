@@ -1,6 +1,10 @@
 FROM node:16-alpine3.15 as firefly-dataexchange-builder
-ADD . /firefly-dataexchange-https
+ADD --chown=1001:0 . /firefly-dataexchange-https
 WORKDIR /firefly-dataexchange-https
+RUN mkdir /.npm \
+    && chgrp -R 0 /.npm \
+    && chmod -R g+rwX /.npm
+USER 1001
 RUN npm install
 RUN npm run build
 
@@ -12,4 +16,6 @@ COPY --from=firefly-dataexchange-builder /firefly-dataexchange-https/package*.js
 RUN npm install --production
 EXPOSE 3000
 EXPOSE 3001
+USER 1001
+
 CMD [ "node", "./build/index.js" ]
