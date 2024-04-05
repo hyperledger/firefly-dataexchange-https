@@ -1,4 +1,4 @@
-FROM node:16-alpine3.15 as firefly-dataexchange-builder
+FROM node:18-alpine3.19 as firefly-dataexchange-builder
 ADD --chown=1001:0 . /firefly-dataexchange-https
 WORKDIR /firefly-dataexchange-https
 RUN mkdir /.npm \
@@ -17,7 +17,7 @@ RUN trivy fs --format spdx-json --output /sbom.spdx.json /SBOM
 RUN trivy sbom /sbom.spdx.json --severity UNKNOWN,HIGH,CRITICAL --exit-code 1
 
 
-FROM node:16-alpine3.15
+FROM node:18-alpine3.19
 WORKDIR /firefly-dataexchange-https
 COPY --from=firefly-dataexchange-builder /firefly-dataexchange-https/package.json /firefly-dataexchange-https
 COPY --from=firefly-dataexchange-builder /firefly-dataexchange-https/build /firefly-dataexchange-https/build
