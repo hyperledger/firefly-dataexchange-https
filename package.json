@@ -28,7 +28,7 @@
     "jsrsasign": "^11.1.0",
     "swagger-ui-express": "^4.3.0",
     "uuid": "^8.3.2",
-    "ws": "^8.5.0",
+    "ws": "^8.17.1",
     "yamljs": "^0.3.0"
   },
   "devDependencies": {
